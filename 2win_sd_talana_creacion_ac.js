@@ -1,9 +1,9 @@
 /**
- * @NApiVersion 2.x
+ * @NApiVersion 2.1
  * @NScriptType ScheduledScript
  * @author Sebastian Alayon <sebastian.alayon@2win.cl>
  */
-define(["N/runtime","N/http","N/error", "./libs_talana_creacion_ac/DAO_controlador_errores.js"], function(runtime,http,errorModule,controladorErrores){
+define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js"], function(https,errorModule,controladorErrores,daoCrearRegistros){
 
     // Definir variable con datos del proceso
     var proceso = {
@@ -23,7 +23,7 @@ define(["N/runtime","N/http","N/error", "./libs_talana_creacion_ac/DAO_controlad
      */
     function ejecutarPeticion(url, token, api) {
         try {
-            log.audit("ejecutarPeticion - url", {
+            log.audit("ejecutarPeticion - parametros recibidos", {
                 "url": url,
                 "tipoDato": typeof(url),
                 "token": token,
@@ -40,9 +40,13 @@ define(["N/runtime","N/http","N/error", "./libs_talana_creacion_ac/DAO_controlad
                 "Authorization": "Token " + token
             };
 
+            var urlhttps = url.replace("http://", "https://");
+
+            log.debug("ejecutarPeticion - url", urlhttps)
+
             // Realizar peticion get
-            var respuesta = http.get({
-                url: url,
+            var respuesta = https.get({
+                url: urlhttps,
                 headers: headerObj 
             });
             
@@ -87,6 +91,7 @@ define(["N/runtime","N/http","N/error", "./libs_talana_creacion_ac/DAO_controlad
             // Recuperar los cluster y sus datos
             var clusters = [
                 {
+                    "id": "CL_Master",
                     "urlBase": "http://qa-internal.talana.dev/facturacion/api/",
                     "token": "61bfc7af41f5856a1d7e0d9533b83d0187a57e06",
                 }
@@ -94,20 +99,32 @@ define(["N/runtime","N/http","N/error", "./libs_talana_creacion_ac/DAO_controlad
 
             // Recorrer cada cluster y sus datos
             for (var index = 0; index < clusters.length; index++) {
-                clusters[index].proceso = proceso
-                clusters[index].proceso.api = "acuerdosComerciales"
-                clusters[index].proceso.urlPeticionAcuerdosComerciales = clusters[index].urlBase + "m_commercialAgreement/"
-                clusters[index].proceso.tokenPeticion = clusters[index].token
-                var acuerdosComerciales = []
-                log.debug("ejecutarTarea - clusters[" + index + "].proceso", clusters[index].proceso)
+                clusters[index].proceso = {
+                    "idCluster": clusters[index].id,
+                    "api": "acuerdosComerciales",
+                    "urlPeticionAcuerdosComerciales": clusters[index].urlBase + "m_commercialAgreement/",
+                    "tokenPeticion": clusters[index].token,
+                    "datosScript": controladorErrores.obtenerDatosScript(),
+                    "etapa": "ejecutarTarea",
+                    "estado": "000",
+                    "tokenProceso": "", 
+                    "resultado": "",
+                }
+                log.debug("ejecutarTarea - clusters[" + index + "", clusters[index])
+
+                var acuerdosComercialesDeCluster = []
+
                 // ejecutar peticion para recuperar acuerdos comerciales
                 var respuestaAcuerdosComerciales = ejecutarPeticion(clusters[index].proceso.urlPeticionAcuerdosComerciales, clusters[index].proceso.tokenPeticion, clusters[index].proceso.api)
 
+                // Si la respuesta tiene resultados
                 if (respuestaAcuerdosComerciales.results.length > 0) {
+
+                    // Por cada resultado
                     respuestaAcuerdosComerciales.results.forEach(function (acuerdoComercial) {
                         acuerdoComercial.proceso = clusters[index].proceso
                         log.debug("ejecutarTarea - acuerdoComercial", acuerdoComercial)
-                        acuerdosComerciales.push(acuerdoComercial)
+                        acuerdosComercialesDeCluster.push(acuerdoComercial)
                     });
 
                     var contador = 0
@@ -121,7 +138,7 @@ define(["N/runtime","N/http","N/error", "./libs_talana_creacion_ac/DAO_controlad
                             respuestaAcuerdosComerciales.results.forEach(function (acuerdoComercial) {
                                 acuerdoComercial.proceso = clusters[index].proceso
                                 log.debug("ejecutarTarea - while - acuerdoComercial", acuerdoComercial)
-                                acuerdosComerciales.push(acuerdoComercial)
+                                acuerdosComercialesDeCluster.push(acuerdoComercial)
                             });
                         }
 
@@ -129,55 +146,86 @@ define(["N/runtime","N/http","N/error", "./libs_talana_creacion_ac/DAO_controlad
                     }
                 }
                 
-                clusters[index].proceso.acuerdosComerciales = acuerdosComerciales
-                log.debug("ejecutarTarea - acuerdosComerciales", clusters[index].proceso.acuerdosComerciales.length)
+                clusters[index].proceso.acuerdosComercialesDeCluster = acuerdosComercialesDeCluster
+                log.debug("ejecutarTarea - acuerdosComerciales", clusters[index].proceso.acuerdosComercialesDeCluster.length)
 
                 var acuerdosComercialesConDetalle = []
 
                 // Por cada acuerdo comercial
-                clusters[index].proceso.acuerdosComerciales.forEach(function (acuerdoComercial) {
+                clusters[index].proceso.acuerdosComercialesDeCluster.forEach(function (acuerdoComercial) {
                     var api = "detalleAcuerdoComercial"
                     var urlPeticionDetalleAcuerdoComercial = clusters[index].urlBase + "m_commercialAgreement/" + acuerdoComercial.id + "/"
 
                     // Ejecutar peticion para recuperar el detalle de cada acuerdo comercial
                     var respuestaDetalleAcuerdoComercial = ejecutarPeticion(urlPeticionDetalleAcuerdoComercial, acuerdoComercial.proceso.tokenPeticion, api)
 
-                    respuestaDetalleAcuerdoComercial.proceso = acuerdoComercial.proceso
-                    respuestaDetalleAcuerdoComercial.proceso.api = api
-                    respuestaDetalleAcuerdoComercial.proceso.urlPeticionDetalleAcuerdoComercial = urlPeticionDetalleAcuerdoComercial
-                    if (respuestaDetalleAcuerdoComercial.hasOwnProperty("payingCompany") ) {
-                        acuerdosComercialesConDetalle.push(respuestaDetalleAcuerdoComercial)
-                    } else {
-                        respuestaDetalleAcuerdoComercial.proceso.resultado = "Acuerdo comercial sin payingCompany" 
-                        acuerdosComercialesConDetalle.push(respuestaDetalleAcuerdoComercial)
+                    respuestaDetalleAcuerdoComercial.proceso = {
+                        "idCluster": clusters[index].id,
+                        "tokenPeticion": clusters[index].token,
+                        "api": api,
+                        "urlPeticionDetalleAcuerdoComercial": urlPeticionDetalleAcuerdoComercial,
+                        "datosScript": controladorErrores.obtenerDatosScript(),
+                        "etapa": "ejecutarTarea",
+                        "estado": "000",
+                        "tokenProceso": "", 
+                        "resultado": "",
                     }
+                    if (!respuestaDetalleAcuerdoComercial.hasOwnProperty("payingCompany") ) {
+                        respuestaDetalleAcuerdoComercial.proceso.resultado = "Acuerdo comercial sin payingCompany" 
+                    } 
+
+                    log.debug("ejecutarTarea - respuestaDetalleAcuerdoComercial", respuestaDetalleAcuerdoComercial)
+                    acuerdosComercialesConDetalle.push(respuestaDetalleAcuerdoComercial)
 
                 });
-
-                // for (var ind = 0; ind < clusters[index].proceso.acuerdosComerciales.length; ind++) {
-                //     clusters[index].proceso.acuerdosComerciales[ind].proceso.api = "detalleAcuerdoComercial"
-                //     clusters[index].proceso.acuerdosComerciales[ind].proceso.urlPeticionDetalleAcuerdoComercial = clusters[index].urlBase + "m_commercialAgreement/" + acuerdoComercial.id + "/"
-                //     log.debug("ejecutarTarea - acuerdoComercial", acuerdoComercial)
-
-                //     // Ejecutar peticion para recuperar el detalle de cada acuerdo comercial
-                //     var respuestaDetalleAcuerdoComercial = ejecutarPeticion(acuerdoComercial.proceso.urlPeticionDetalleAcuerdoComercial, acuerdoComercial.proceso.proceso.tokenPeticion, acuerdoComercial.proceso.api)
-
-                //     if (respuestaDetalleAcuerdoComercial.hasOwnProperty("payingCompany") ) {
-                //         respuestaDetalleAcuerdoComercial.proceso = acuerdoComercial.proceso
-                //         acuerdosComercialesConDetalle.push(respuestaDetalleAcuerdoComercial)
-                //     } else {
-                //         respuestaDetalleAcuerdoComercial.proceso = acuerdoComercial.proceso
-                //         respuestaDetalleAcuerdoComercial.proceso.resultado = "Acuerdo comercial sin payingCompany" 
-                //         acuerdosComercialesConDetalle.push(respuestaDetalleAcuerdoComercial)
-                //     }
-                    
-                // }
 
                 clusters[index].proceso.acuerdosComercialesConDetalle = acuerdosComercialesConDetalle
 
+                var acuerdosComercialesConRazonesSociales = []
+
                 clusters[index].proceso.acuerdosComercialesConDetalle.forEach(function (acuerdoComercialConDetalle) {
                     log.debug("ejecutarTarea - acuerdoComercialConDetalle", acuerdoComercialConDetalle)
+                    if (acuerdoComercialConDetalle.hasOwnProperty("payingCompany")) {
+                        var api = "razonSocial"
+                        var urlPeticionRazonSocial = clusters[index].urlBase + "m_razonSocial/" + acuerdoComercialConDetalle.payingCompany + "/"
+    
+                        // Ejecutar peticion para recuperar el detalle de cada acuerdo comercial
+                        var respuestaRazonSocial = ejecutarPeticion(urlPeticionRazonSocial, acuerdoComercialConDetalle.proceso.tokenPeticion, api)
+    
+                        respuestaRazonSocial.proceso = {
+                            "idCluster": clusters[index].id,
+                            "tokenPeticion": clusters[index].token,
+                            "api": api,
+                            "urlPeticionRazonSocial": urlPeticionRazonSocial,
+                            "datosScript": controladorErrores.obtenerDatosScript(),
+                            "etapa": "ejecutarTarea",
+                            "estado": "000",
+                            "tokenProceso": "", 
+                            "resultado": "",
+                        }
+                        if (!respuestaRazonSocial.hasOwnProperty("id")) {
+                            respuestaRazonSocial.proceso.resultado = "Razon social sin id" 
+                        } 
+                        
+                        var objetoDatosParaCustomer = {
+                            "acuerdoComercial": acuerdoComercialConDetalle,
+                            "razonSocial": respuestaRazonSocial
+                        }
+
+                        acuerdosComercialesConRazonesSociales.push(objetoDatosParaCustomer)
+
+                    }
                 });
+
+
+                // Crear customer
+                // var contadoracuerdosComercialesConRazonesSociales = 0
+                // acuerdosComercialesConRazonesSociales.forEach(function (acuerdoComercialConRazonSocial) {
+                //     // Ejecutar funcion para crear customer
+                //     log.debug("ejecutarTarea - acuerdoComercialConRazonSocial - acuerdoComercial - " + contadoracuerdosComercialesConRazonesSociales, acuerdoComercialConRazonSocial.acuerdoComercial)
+                //     log.debug("ejecutarTarea - acuerdoComercialConRazonSocial - razonSocial - " + contadoracuerdosComercialesConRazonesSociales, acuerdoComercialConRazonSocial.razonSocial)
+                //     contadoracuerdosComercialesConRazonesSociales += 1
+                // });
 
             }
 
