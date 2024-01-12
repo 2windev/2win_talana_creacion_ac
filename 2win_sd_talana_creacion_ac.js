@@ -227,6 +227,19 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                 //     contadoracuerdosComercialesConRazonesSociales += 1
                 // });
 
+                for (var i = 2; i < 3; i++) {
+                    acuerdosComercialesConRazonesSociales[i] = daoCrearRegistros.crearCliente(acuerdosComercialesConRazonesSociales[i])
+                    
+                    log.debug("ejecutarTarea - acuerdoComercial",acuerdosComercialesConRazonesSociales[i].acuerdoComercial)
+                    log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
+
+                    // if (acuerdosComercialesConRazonesSociales[i].razonSocial === "") {
+                        
+                    // } else { 
+
+                    // }
+                }
+
             }
 
         } catch (error) {
