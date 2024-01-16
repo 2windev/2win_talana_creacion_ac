@@ -19,6 +19,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
 
             // Definir valores para campos del registro
             datos.razonSocial.proceso.etapa = "crearCliente"
+            datos.razonSocial.proceso.custjob = datos.razonSocial.id + "/" + datos.acuerdoComercial.id
             datos.razonSocial.proceso.externalId = datos.razonSocial.proceso.idCluster + "_" + datos.razonSocial.id + "_" + datos.acuerdoComercial.id
             datos.razonSocial.proceso.digitoVerificador = datos.razonSocial.rut[datos.razonSocial.rut.length - 1]
             datos.acuerdoComercial.proceso.detalleAcuerdoComercial = `<p>Acuerdo comercial № ${datos.acuerdoComercial.id} <br>Razón social pagadora № ${datos.razonSocial.id} ${datos.razonSocial.rut} ${datos.razonSocial.razonSocial}<br></p><p> Plan Contratado: True </p><p>BillingCycle: ${datos.acuerdoComercial.billingCycle}</p><p> Notas: ${datos.acuerdoComercial.notes}</p><p>Plan Contratado: <pre>${datos.acuerdoComercial.hired_plan}</pre> </p>`
@@ -26,7 +27,6 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             datos.razonSocial.proceso.companyname = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.razonSocial.proceso.addressee = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
 
-            log.debug("crearCliente - datos - modificados", datos)
             log.debug("crearCliente - datos.razonSocial", datos.razonSocial)
             log.debug("crearCliente - datos.acuerdoComercial", datos.acuerdoComercial)
 
@@ -36,6 +36,10 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             // Definir campos registro
             registro.setValue({ fieldId: "entityid", value: datos.razonSocial.proceso.entityid });
             log.debug ("crearCliente - bodyFields","entityid");
+            registro.setValue({ fieldId: "custentity_tal_rz_pk", value: datos.razonSocial.id });
+            log.debug ("crearCliente - bodyFields","custentity_tal_rz_pk");
+            registro.setValue({ fieldId: "custentity_lmry_sv_taxpayer_number", value: datos.razonSocial.razonSocial });
+            log.debug ("crearCliente - bodyFields","custentity_lmry_sv_taxpayer_number");
             registro.setValue({ fieldId: "companyname", value: datos.razonSocial.proceso.companyname });
             log.debug ("crearCliente - bodyFields","companyname");
             registro.setValue({ fieldId: "externalid", value: datos.razonSocial.proceso.externalId });
@@ -62,32 +66,31 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             // log.debug("crearCliente - linea","campo - addr2");
             // addressSubrecord.setValue({ fieldId: "city", value: "" });
             // log.debug("crearCliente - linea","campo - city");
+            // addressSubrecord.setValue({ fieldId: "state", value: datos.razonSocial.comuna });
+            // log.debug("crearCliente - linea","campo - state");
             addressSubrecord.setValue({ fieldId: "country", value: "CL" });
             log.debug("crearCliente - linea","campo - country");
             addressSubrecord.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
             log.debug("crearCliente - linea","campo - phone");
-            // addressSubrecord.save()
             lineaRegistro.commitLine({ sublistId: 'addressbook' });
             log.debug("crearCliente - lineaRegistro", "Se guardo linea addressbook");
-            
 
             registro.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
             log.debug ("crearCliente - bodyFields","phone");
             /**@todo - Reemplazar valores estaticos */
-            registro.setValue({ fieldId: "custentity_tal_ca_pk", value: "3896" }); // datos.razonSocial.rutRepresentanteLegal
+            registro.setValue({ fieldId: "custentity_tal_ca_pk", value: datos.acuerdoComercial.id }); // datos.acuerdoComercial.id
             log.debug ("crearCliente - bodyFields","custentity_tal_ca_pk");
-            registro.setValue({ fieldId: "email", value: "fpgarcia@cmvm.cl" }); // datos.razonSocial.logo
+            registro.setValue({ fieldId: "email", value: datos.acuerdoComercial.emails }); // datos.razonSocial.logo
             log.debug ("crearCliente - bodyFields","email");
             log.debug ("crearCliente - datos.razonSocial.empresa_est",datos.razonSocial.empresa_est);
-            registro.setValue({ fieldId: "comments", value: datos.razonSocial.empresa_est });
+            registro.setValue({ fieldId: "comments", value: datos.acuerdoComercial.notes }); // datos.razonSocial.empresa_est
             log.debug ("crearCliente - bodyFields","comments");
-
             registro.setValue({ fieldId: "custentity_lmry_nomolestar", value: datos.acuerdoComercial.no_molestar });
             log.debug ("crearCliente - bodyFields","custentity_lmry_nomolestar");
             registro.setValue({ fieldId: "custentity_lmry_enimplementacion", value: datos.acuerdoComercial.en_implementacion });
             log.debug ("crearCliente - bodyFields","custentity_lmry_enimplementacion");
-            registro.setValue({ fieldId: "custentity_2winestadoacuerdo", value: datos.acuerdoComercial.status }); 
-            log.debug ("crearCliente - bodyFields","custentity_2winestadoacuerdo");
+            registro.setValue({ fieldId: "custentity_2winestadoac", value: datos.acuerdoComercial.status }); 
+            log.debug ("crearCliente - bodyFields","custentity_2winestadoac");
             registro.setValue({ fieldId: "custentity_2winonhold", value: datos.acuerdoComercial.on_hold });
             log.debug ("crearCliente - bodyFields","custentity_2winonhold");
             registro.setValue({ fieldId: "custentity_2winmotivoonhold", value: datos.acuerdoComercial.on_hold_reason });
