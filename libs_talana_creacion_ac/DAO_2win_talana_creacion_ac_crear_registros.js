@@ -22,6 +22,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             datos.razonSocial.proceso.custjob = datos.razonSocial.id + "/" + datos.acuerdoComercial.id
             datos.razonSocial.proceso.externalId = datos.razonSocial.proceso.idCluster + "_" + datos.razonSocial.id + "_" + datos.acuerdoComercial.id
             datos.razonSocial.proceso.digitoVerificador = datos.razonSocial.rut[datos.razonSocial.rut.length - 1]
+            datos.razonSocial.proceso.taxPayerNumber = datos.razonSocial.rut.slice(0, -2);
             datos.acuerdoComercial.proceso.detalleAcuerdoComercial = `<p>Acuerdo comercial № ${datos.acuerdoComercial.id} <br>Razón social pagadora № ${datos.razonSocial.id} ${datos.razonSocial.rut} ${datos.razonSocial.razonSocial}<br></p><p> Plan Contratado: True </p><p>BillingCycle: ${datos.acuerdoComercial.billingCycle}</p><p> Notas: ${datos.acuerdoComercial.notes}</p><p>Plan Contratado: <pre>${datos.acuerdoComercial.hired_plan}</pre> </p>`
             datos.razonSocial.proceso.entityid = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.razonSocial.proceso.companyname = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
@@ -38,7 +39,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             log.debug ("crearCliente - bodyFields","entityid");
             registro.setValue({ fieldId: "custentity_tal_rz_pk", value: datos.razonSocial.id });
             log.debug ("crearCliente - bodyFields","custentity_tal_rz_pk");
-            registro.setValue({ fieldId: "custentity_lmry_sv_taxpayer_number", value: datos.razonSocial.razonSocial });
+            registro.setValue({ fieldId: "custentity_lmry_sv_taxpayer_number", value: datos.razonSocial.proceso.taxPayerNumber });
             log.debug ("crearCliente - bodyFields","custentity_lmry_sv_taxpayer_number");
             registro.setValue({ fieldId: "companyname", value: datos.razonSocial.proceso.companyname });
             log.debug ("crearCliente - bodyFields","companyname");
