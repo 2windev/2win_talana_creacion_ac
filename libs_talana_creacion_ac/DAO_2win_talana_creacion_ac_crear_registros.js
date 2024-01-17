@@ -78,13 +78,11 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
 
             registro.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
             log.debug ("crearCliente - bodyFields","phone");
-            /**@todo - Reemplazar valores estaticos */
-            registro.setValue({ fieldId: "custentity_tal_ca_pk", value: datos.acuerdoComercial.id }); // datos.acuerdoComercial.id
+            registro.setValue({ fieldId: "custentity_tal_ca_pk", value: datos.acuerdoComercial.id }); 
             log.debug ("crearCliente - bodyFields","custentity_tal_ca_pk");
-            registro.setValue({ fieldId: "email", value: datos.acuerdoComercial.emails }); // datos.razonSocial.logo
+            registro.setValue({ fieldId: "email", value: datos.acuerdoComercial.emails }); 
             log.debug ("crearCliente - bodyFields","email");
-            log.debug ("crearCliente - datos.razonSocial.empresa_est",datos.razonSocial.empresa_est);
-            registro.setValue({ fieldId: "comments", value: datos.acuerdoComercial.notes }); // datos.razonSocial.empresa_est
+            registro.setValue({ fieldId: "comments", value: datos.acuerdoComercial.notes }); 
             log.debug ("crearCliente - bodyFields","comments");
             registro.setValue({ fieldId: "custentity_lmry_nomolestar", value: datos.acuerdoComercial.no_molestar });
             log.debug ("crearCliente - bodyFields","custentity_lmry_nomolestar");
