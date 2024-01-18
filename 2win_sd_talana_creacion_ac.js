@@ -3,7 +3,7 @@
  * @NScriptType ScheduledScript
  * @author Sebastian Alayon <sebastian.alayon@2win.cl>
  */
-define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js"], function(https,errorModule,controladorErrores,daoCrearRegistros){
+define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_busquedas.js"], function(https,errorModule,controladorErrores,daoCrearRegistros,dao){
 
     // Definir variable con datos del proceso
     var proceso = {
@@ -110,7 +110,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                     "tokenProceso": "", 
                     "resultado": "",
                 }
-                log.debug("ejecutarTarea - clusters[" + index + "", clusters[index])
+                log.debug("ejecutarTarea - clusters[" + index + "]", clusters[index])
 
                 var acuerdosComercialesDeCluster = []
 
@@ -131,7 +131,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                     var contador = 0
                     /**@todo - Reemplazar: contador < 2 por respuestaAcuerdosComerciales.next !== null */
                     // Mientras existan mas paginas
-                    while (contador < 2) { // respuestaAcuerdosComerciales.next !== null
+                    while (contador < 1) { // respuestaAcuerdosComerciales.next !== null
                         clusters[index].proceso.urlPeticionAcuerdosComerciales = respuestaAcuerdosComerciales.next
                         // ejecutar peticion para recuperar siguiente paginaacuerdos comerciales
                         respuestaAcuerdosComerciales = ejecutarPeticion(clusters[index].proceso.urlPeticionAcuerdosComerciales, clusters[index].proceso.tokenPeticion, clusters[index].proceso.api)
@@ -223,26 +223,6 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                             }
     
                             acuerdosComercialesConRazonesSociales.push(objetoDatosParaCustomer)
-
-                            // Crear customer
-                            // var contadoracuerdosComercialesConRazonesSociales = 0
-                            // acuerdosComercialesConRazonesSociales.forEach(function (acuerdoComercialConRazonSocial) {
-                            //     if (acuerdoComercialConRazonSocial.hasOwnProperty("acuerdoComercial") & acuerdoComercialConRazonSocial.hasOwnProperty("razonSocial")) {
-            
-                            //         if (acuerdoComercialConRazonSocial.acuerdoComercial.proceso.estado === "000" & acuerdoComercialConRazonSocial.razonSocial.proceso.estado === "000") {
-                            //             // Crear cliente
-                            //             acuerdoComercialConRazonSocial = daoCrearRegistros.crearCliente(acuerdoComercialConRazonSocial)
-                            //         } 
-
-                            //         contadoracuerdosComercialesConRazonesSociales += 1
-                                    
-                            //         // Crear reporte
-                            //         // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
-                            //         // acuerdosComercialesConRazonesSociales[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(acuerdosComercialesConRazonesSociales[i].razonSocial.proceso)
-                            //         // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
-                            //     } 
-
-                            // });
     
                         } else {
                             // Crear reporte
@@ -251,22 +231,57 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                         }
                     });
 
-                    for (var i = 4; i < 5; i++) {
-                        if (acuerdosComercialesConRazonesSociales[i].hasOwnProperty("acuerdoComercial") && acuerdosComercialesConRazonesSociales[i].hasOwnProperty("razonSocial")) {
-    
-                            if (acuerdosComercialesConRazonesSociales[i].acuerdoComercial.proceso.estado === "000" && acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.estado === "000") {
-                                // Crear cliente
-                                acuerdosComercialesConRazonesSociales[i] = daoCrearRegistros.crearCliente(acuerdosComercialesConRazonesSociales[i])
-    
-                            } 
-    
-                            // Crear reporte
-                            // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
-                            // acuerdosComercialesConRazonesSociales[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(acuerdosComercialesConRazonesSociales[i].razonSocial.proceso)
-                            // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
-                            
-                        } 
+                    // Evaluar si existen acuerdos comerciales agrupados con su razon social
+                    if (acuerdosComercialesConRazonesSociales.length > 0) {
+                        // Crear customer
+                        // var contadoracuerdosComercialesConRazonesSociales = 0
+                        // acuerdosComercialesConRazonesSociales.forEach(function (acuerdoComercialConRazonSocial) {
+                        //     if (acuerdoComercialConRazonSocial.hasOwnProperty("acuerdoComercial") & acuerdoComercialConRazonSocial.hasOwnProperty("razonSocial")) {
+        
+                        //         if (acuerdoComercialConRazonSocial.acuerdoComercial.proceso.estado === "000" & acuerdoComercialConRazonSocial.razonSocial.proceso.estado === "000") {
+                        //             // Crear cliente
+                        //             acuerdoComercialConRazonSocial = daoCrearRegistros.crearCliente(acuerdoComercialConRazonSocial)
+                        //         } 
+
+                        //         contadoracuerdosComercialesConRazonesSociales += 1
+                                
+                        //         // Crear reporte
+                        //         // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
+                        //         // acuerdosComercialesConRazonesSociales[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(acuerdosComercialesConRazonesSociales[i].razonSocial.proceso)
+                        //         // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
+                        //     } 
+
+                        // });
                         
+                        for (var i = 0; i < 5; i++) {
+                            if (acuerdosComercialesConRazonesSociales[i].hasOwnProperty("acuerdoComercial") && acuerdosComercialesConRazonesSociales[i].hasOwnProperty("razonSocial")) {
+        
+                                if (acuerdosComercialesConRazonesSociales[i].acuerdoComercial.proceso.estado === "000" && acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.estado === "000") {
+                                    // Validar existencia de customer en netsuite
+                                    acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.externalId = acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.idCluster + "_" + acuerdosComercialesConRazonesSociales[i].razonSocial.id + "_" + acuerdosComercialesConRazonesSociales[i].acuerdoComercial.id
+                                    var customerExistente = dao.busquedaCustomer(acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.externalId)
+                                    
+                                    if (customerExistente.length > 0) {
+                                        acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.idCustomer = "ya existe registro custumer: " + customerExistente[0].internalId
+                                        acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.entityid = customerExistente[0].internalId
+                                    } else {
+                                        // Crear cliente
+                                        acuerdosComercialesConRazonesSociales[i] = daoCrearRegistros.crearCliente(acuerdosComercialesConRazonesSociales[i])
+                                    }
+
+                                    // Crear cliente
+                                    // acuerdosComercialesConRazonesSociales[i] = daoCrearRegistros.crearCliente(acuerdosComercialesConRazonesSociales[i])
+        
+                                } 
+        
+                                // Crear reporte
+                                log.debug("ejecutarTarea - acuerdoComercial",acuerdosComercialesConRazonesSociales[i].acuerdoComercial)
+                                log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
+                                // acuerdosComercialesConRazonesSociales[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(acuerdosComercialesConRazonesSociales[i].razonSocial.proceso)
+                                // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
+                                
+                            } 
+                        }
                     }
     
                 } else {
