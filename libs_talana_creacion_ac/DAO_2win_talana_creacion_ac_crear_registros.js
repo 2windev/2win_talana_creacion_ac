@@ -19,14 +19,13 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
 
             // Definir valores para campos del registro
             datos.razonSocial.proceso.etapa = "crearCliente"
-            datos.razonSocial.proceso.custjob = datos.razonSocial.id + "/" + datos.acuerdoComercial.id
             datos.razonSocial.proceso.externalId = datos.razonSocial.proceso.idCluster + "_" + datos.razonSocial.id + "_" + datos.acuerdoComercial.id
-            datos.razonSocial.proceso.digitoVerificador = datos.razonSocial.rut[datos.razonSocial.rut.length - 1]
-            datos.razonSocial.proceso.taxPayerNumber = datos.razonSocial.rut.slice(0, -2);
-            datos.acuerdoComercial.proceso.detalleAcuerdoComercial = `<p>Acuerdo comercial № ${datos.acuerdoComercial.id} <br>Razón social pagadora № ${datos.razonSocial.id} ${datos.razonSocial.rut} ${datos.razonSocial.razonSocial}<br></p><p> Plan Contratado: True </p><p>BillingCycle: ${datos.acuerdoComercial.billingCycle}</p><p> Notas: ${datos.acuerdoComercial.notes}</p><p>Plan Contratado: <pre>${datos.acuerdoComercial.hired_plan}</pre> </p>`
             datos.razonSocial.proceso.entityid = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
+            datos.razonSocial.proceso.taxPayerNumber = datos.razonSocial.rut.slice(0, -2);
             datos.razonSocial.proceso.companyname = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
+            datos.razonSocial.proceso.digitoVerificador = datos.razonSocial.rut[datos.razonSocial.rut.length - 1]
             datos.razonSocial.proceso.addressee = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
+            datos.acuerdoComercial.proceso.detalleAcuerdoComercial = `<p>Acuerdo comercial № ${datos.acuerdoComercial.id} <br>Razón social pagadora № ${datos.razonSocial.id} ${datos.razonSocial.rut} ${datos.razonSocial.razonSocial}<br></p><p> Plan Contratado: True </p><p>BillingCycle: ${datos.acuerdoComercial.billingCycle}</p><p> Notas: ${datos.acuerdoComercial.notes}</p><p>Plan Contratado: <pre>${datos.acuerdoComercial.hired_plan}</pre> </p>`
 
             log.debug("crearCliente - datos.razonSocial", datos.razonSocial)
             log.debug("crearCliente - datos.acuerdoComercial", datos.acuerdoComercial)
@@ -100,17 +99,18 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             log.debug ("crearCliente - bodyFields","custentity_tal_commercialaggrdetails");
 
             // Guardar registro
-            var idCliente = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
-            log.audit("crearCliente - idCliente", idCliente)
+            var idCustomer = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
+            log.audit("crearCliente - idCustomer", idCustomer)
 
-            datos.razonSocial.proceso.idCliente = idCliente
+            datos.razonSocial.proceso.idCustomer = idCustomer
             datos.razonSocial.proceso.resultado = "OK"
-            datos.acuerdoComercial.proceso.idCliente = idCliente
+            datos.acuerdoComercial.proceso.idCustomer = idCustomer
 
             return datos
         }catch(error){
             log.error("crearCliente - error", error);
-            datos.razonSocial.proceso.idCliente = ""
+
+            datos.razonSocial.proceso.idCustomer = ""
             datos.razonSocial.proceso.estado = "001"
             datos.razonSocial.proceso.resultado = error.message
 
