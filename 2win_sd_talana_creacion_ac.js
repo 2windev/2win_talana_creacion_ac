@@ -40,8 +40,8 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                 "Authorization": "Token " + token
             };
 
+            // Cambiar url http por https
             var urlhttps = url.replace("http://", "https://");
-
             log.debug("ejecutarPeticion - url", urlhttps)
 
             // Realizar peticion get
@@ -68,7 +68,6 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                     throw errorModule.create(controladorErrores.controladorErrores("002","ejecutarPeticion",respuesta.body))
                 }
             }
-
         } catch (error) {
             log.error("ejecutarPeticion - error", error);
 
@@ -97,51 +96,61 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                 }
             ]
 
-            // Recorrer cada cluster y sus datos
-            for (var index = 0; index < clusters.length; index++) {
-                clusters[index].proceso = {
-                    "idCluster": clusters[index].id,
+            // Recorrer cada cluster
+            clusters.forEach(cluster => {
+                // Agregar propiedad proceso a cluster
+                cluster.proceso = {
+                    "idCluster": cluster.id,
                     "api": "acuerdosComerciales",
-                    "urlPeticionAcuerdosComerciales": clusters[index].urlBase + "m_commercialAgreement/",
-                    "tokenPeticion": clusters[index].token,
+                    "urlPeticionAcuerdosComerciales": cluster.urlBase + "m_commercialAgreement/",
+                    "tokenPeticion": cluster.token,
+                    "acuerdosComerciales": [],
+                    "acuerdosComercialesConDetalle": [],
+                    "payingCompanys": [],
+                    "razonesSociales": [],
+                    "agrupadosAcRs": [],
                     "datosScript": controladorErrores.obtenerDatosScript(),
                     "etapa": "ejecutarTarea",
                     "estado": "000",
                     "tokenProceso": "", 
                     "resultado": "",
                 }
-                log.debug("ejecutarTarea - clusters[" + index + "]", clusters[index])
 
-                var acuerdosComercialesDeCluster = []
+                log.debug("ejecutarTarea - cluster", cluster)
 
                 // ejecutar peticion para recuperar acuerdos comerciales
-                var respuestaAcuerdosComerciales = ejecutarPeticion(clusters[index].proceso.urlPeticionAcuerdosComerciales, clusters[index].proceso.tokenPeticion, clusters[index].proceso.api)
+                var respuestaAcuerdosComerciales = ejecutarPeticion(cluster.proceso.urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
 
-                // Si la respuesta tiene resultados
+                // Array que almacenara los acuerdos comerciales recuperados
+                var acuerdosComerciales = []
+
+                // Evaluar si la propiedad results de la respuesta tiene elemetos
                 if (respuestaAcuerdosComerciales.results.length > 0) {
-
                     // Por cada cada acuerdo comercial del array results
                     respuestaAcuerdosComerciales.results.forEach(function (acuerdoComercial) {
-                        acuerdoComercial.proceso = clusters[index].proceso
+                        acuerdoComercial.proceso = cluster.proceso
                         log.debug("ejecutarTarea - acuerdoComercial", acuerdoComercial)
+
                         // Anadir cada acuerdo comercial al array que almacena los acuerdos comerciales del cluster
-                        acuerdosComercialesDeCluster.push(acuerdoComercial)
+                        acuerdosComerciales.push(acuerdoComercial)
                     });
 
                     var contador = 0
                     /**@todo - Reemplazar: contador < 2 por respuestaAcuerdosComerciales.next !== null */
                     // Mientras existan mas paginas
-                    while (contador < 1) { // respuestaAcuerdosComerciales.next !== null
-                        clusters[index].proceso.urlPeticionAcuerdosComerciales = respuestaAcuerdosComerciales.next
+                    while (contador < 3) { // respuestaAcuerdosComerciales.next !== null
+                        cluster.proceso.urlPeticionAcuerdosComerciales = respuestaAcuerdosComerciales.next
                         // ejecutar peticion para recuperar siguiente paginaacuerdos comerciales
-                        respuestaAcuerdosComerciales = ejecutarPeticion(clusters[index].proceso.urlPeticionAcuerdosComerciales, clusters[index].proceso.tokenPeticion, clusters[index].proceso.api)
+                        respuestaAcuerdosComerciales = ejecutarPeticion(cluster.proceso.urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
 
+                        // Evaluar si la propiedad results de la respuesta tiene elemetos
                         if (respuestaAcuerdosComerciales.results.length > 0) {
                             respuestaAcuerdosComerciales.results.forEach(function (acuerdoComercial) {
-                                acuerdoComercial.proceso = clusters[index].proceso
+                                acuerdoComercial.proceso = cluster.proceso
                                 log.debug("ejecutarTarea - while - if - acuerdoComercial", acuerdoComercial)
+
                                 // Anadir cada acuerdo comercial de la pagina al array que almacena los acuerdos comerciales del cluster
-                                acuerdosComercialesDeCluster.push(acuerdoComercial)
+                                acuerdosComerciales.push(acuerdoComercial)
                             });
                         } else {
                             log.error("ejecutarTarea - while - else - acuerdoComercial", acuerdoComercial)
@@ -150,25 +159,25 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                         contador += 1
                     }
 
-                    // Agregar los acuerdos comerciales recuperados al cluster
-                    clusters[index].proceso.acuerdosComercialesDeCluster = acuerdosComercialesDeCluster
-                    log.debug("ejecutarTarea - acuerdosComercialesDeCluster", clusters[index].proceso.acuerdosComercialesDeCluster.length)
-    
-                    // Declarar array que almacenara cada detalle de los acuerdos comerciales
+                    // Agregar los acuerdos comercuales recuperados al cluster
+                    cluster.proceso.acuerdosComerciales = acuerdosComerciales
+
+                    // Arrays que alamecenaran los id payingCompany y los acuerdos comerciales con detalle
+                    var payingCompanys = []
                     var acuerdosComercialesConDetalle = []
-    
-                    // Por cada acuerdo comercial
-                    clusters[index].proceso.acuerdosComercialesDeCluster.forEach(function (acuerdoComercial) {
+
+                    // Por cada acuerdo comercial recuperado
+                    cluster.proceso.acuerdosComerciales.forEach(function (acuerdoComercial) {
                         // Definir api y url para la peticion
                         var api = "detalleAcuerdoComercial"
-                        var urlPeticionDetalleAcuerdoComercial = clusters[index].urlBase + "m_commercialAgreement/" + acuerdoComercial.id + "/"
+                        var urlPeticionDetalleAcuerdoComercial = cluster.urlBase + "m_commercialAgreement/" + acuerdoComercial.id + "/"
     
                         // Ejecutar peticion para recuperar el detalle de cada acuerdo comercial
-                        var respuestaDetalleAcuerdoComercial = ejecutarPeticion(urlPeticionDetalleAcuerdoComercial, acuerdoComercial.proceso.tokenPeticion, api)
+                        var respuestaDetalleAcuerdoComercial = ejecutarPeticion(urlPeticionDetalleAcuerdoComercial,cluster.token, api)
     
                         respuestaDetalleAcuerdoComercial.proceso = {
-                            "idCluster": clusters[index].id,
-                            "tokenPeticion": clusters[index].token,
+                            "idCluster": cluster.id,
+                            "tokenPeticion": cluster.token,
                             "api": api,
                             "urlPeticionDetalleAcuerdoComercial": urlPeticionDetalleAcuerdoComercial,
                             "datosScript": controladorErrores.obtenerDatosScript(),
@@ -177,65 +186,89 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                             "tokenProceso": "", 
                             "resultado": "",
                         }
-                        if (!respuestaDetalleAcuerdoComercial.hasOwnProperty("payingCompany") ) {
+
+                        // Evaluar si el acuerdo comercial recuperado tiene la propiedad payingCompany
+                        if (respuestaDetalleAcuerdoComercial.hasOwnProperty("payingCompany") ) {
+                            // Aislar payingCompany
+                            // Comprobar si el elemento ya existe en el array
+                            if (!payingCompanys.includes(respuestaDetalleAcuerdoComercial.payingCompany)) {
+                                // Si no existe, agregarlo al array
+                                payingCompanys.push(respuestaDetalleAcuerdoComercial.payingCompany);
+                            }
+                        } else {
                             respuestaDetalleAcuerdoComercial.proceso.estado = "002" 
                             respuestaDetalleAcuerdoComercial.proceso.resultado = "Acuerdo comercial sin payingCompany"
-                        } 
+                        }
     
                         log.debug("ejecutarTarea - respuestaDetalleAcuerdoComercial", respuestaDetalleAcuerdoComercial)
                         acuerdosComercialesConDetalle.push(respuestaDetalleAcuerdoComercial)
     
                     });
-    
-                    clusters[index].proceso.acuerdosComercialesConDetalle = acuerdosComercialesConDetalle
-    
-                    // Declarar array que almacenara cada acuerdo comercial agrupado con su razon social 
-                    var acuerdosComercialesConRazonesSociales = []
-    
-                    clusters[index].proceso.acuerdosComercialesConDetalle.forEach(function (acuerdoComercialConDetalle) {
-                        if (acuerdoComercialConDetalle.hasOwnProperty("payingCompany") && acuerdoComercialConDetalle.proceso.estado === "000") {
-                            // Definir api y url a usar para la peticion que recupera la razon social 
-                            var api = "razonSocial"
-                            var urlPeticionRazonSocial = clusters[index].urlBase + "m_razonSocial/" + acuerdoComercialConDetalle.payingCompany + "/"
-        
-                            // Ejecutar peticion para recuperar el detalle de cada acuerdo comercial
-                            var respuestaRazonSocial = ejecutarPeticion(urlPeticionRazonSocial, acuerdoComercialConDetalle.proceso.tokenPeticion, api)
-        
-                            respuestaRazonSocial.proceso = {
-                                "idCluster": clusters[index].id,
-                                "tokenPeticion": clusters[index].token,
-                                "api": api,
-                                "urlPeticionRazonSocial": urlPeticionRazonSocial,
-                                "datosScript": controladorErrores.obtenerDatosScript(),
-                                "etapa": "ejecutarTarea",
-                                "estado": "000",
-                                "tokenProceso": "", 
-                                "resultado": "",
-                            }
-                            if (!respuestaRazonSocial.hasOwnProperty("id")) {
-                                respuestaRazonSocial.proceso.estado = "002" 
-                                respuestaRazonSocial.proceso.resultado = "Razon social sin id" 
-                            } 
-                            
-                            var objetoDatosParaCustomer = {
-                                "acuerdoComercial": acuerdoComercialConDetalle,
-                                "razonSocial": respuestaRazonSocial
-                            }
-    
-                            acuerdosComercialesConRazonesSociales.push(objetoDatosParaCustomer)
-    
-                        } else {
-                            // Crear reporte
-                            // log.debug("ejecutarTarea - else - acuerdosComercialesConDetalle",acuerdosComercialesConDetalle)
-                            // acuerdosComercialesConDetalle.proceso = daoCrearRegistros.crearReporteAuditoria(acuerdosComercialesConDetalle.proceso)
+
+                    // Añadir los payingCompany y acuerdos comerciales al cluster
+                    cluster.proceso.payingCompanys = payingCompanys
+                    cluster.proceso.acuerdosComercialesConDetalle = acuerdosComercialesConDetalle
+
+                    // Arrays que almacenaran las razones sociales y los acuerdos comerciales junto a su razon social 
+                    var razonesSociales = []
+                    var agrupadosAcRs = []
+
+                    // Por cada payingCompany
+                    cluster.proceso.payingCompanys.forEach(payingCompany => {
+                        // Definir api y url a usar para la peticion que recupera la razon social 
+                        var api = "razonSocial"
+                        var urlPeticionRazonSocial = cluster.urlBase + "m_razonSocial/" + payingCompany + "/"
+
+                        // Ejecutar peticion para recuperar la razon social
+                        var respuestaRazonSocial = ejecutarPeticion(urlPeticionRazonSocial,cluster.token,api)
+
+                        respuestaRazonSocial.proceso = {
+                            "idCluster": cluster.id,
+                            "tokenPeticion": cluster.token,
+                            "api": api,
+                            "urlPeticionRazonSocial": urlPeticionRazonSocial,
+                            "datosScript": controladorErrores.obtenerDatosScript(),
+                            "etapa": "ejecutarTarea",
+                            "estado": "000",
+                            "tokenProceso": "", 
+                            "resultado": "",
                         }
+
+                        // Evaluar si la razon social recuperada no tiene la propiedad id
+                        if (!respuestaRazonSocial.hasOwnProperty("id")) {
+                            respuestaRazonSocial.proceso.estado = "002" 
+                            respuestaRazonSocial.proceso.resultado = "Razon social sin id" 
+                        } 
+
+                        razonesSociales.push(respuestaRazonSocial)
+
+                        // Recorrer acuerdos comerciales recuperados
+                        cluster.proceso.acuerdosComercialesConDetalle.forEach(acuerdoComercialConDetalle => {
+                            if (acuerdoComercialConDetalle.payingCompany === respuestaRazonSocial.id) {
+                                respuestaRazonSocial.proceso.externalId = cluster.id + "_" + respuestaRazonSocial.id + "_" + acuerdoComercialConDetalle.id
+                                var objetoDatosParaCustomer = {
+                                    "acuerdoComercial": acuerdoComercialConDetalle,
+                                    "razonSocial": respuestaRazonSocial
+                                }
+        
+                                agrupadosAcRs.push(objetoDatosParaCustomer)
+                            } 
+                        });
                     });
 
+                    // Agreagar las razones sociales recuperadas y su emparejamiento con el acurdo comercial al cluster
+                    cluster.proceso.razonesSociales = razonesSociales
+                    cluster.proceso.agrupadosAcRs = agrupadosAcRs
+
+                    log.debug("ejecutarTarea - acuerdosComerciales", cluster.proceso.acuerdosComerciales.length)
+                    log.debug("ejecutarTarea - payingCompanys", cluster.proceso.payingCompanys.length)
+                    log.debug("ejecutarTarea - agrupadosAcRs", cluster.proceso.agrupadosAcRs.length)
+
                     // Evaluar si existen acuerdos comerciales agrupados con su razon social
-                    if (acuerdosComercialesConRazonesSociales.length > 0) {
+                    if (cluster.proceso.agrupadosAcRs.length > 0) {
                         // Crear customer
-                        // var contadoracuerdosComercialesConRazonesSociales = 0
-                        // acuerdosComercialesConRazonesSociales.forEach(function (acuerdoComercialConRazonSocial) {
+                        // var contadorcluster.proceso.agrupadosAcRs = 0
+                        // cluster.proceso.agrupadosAcRs.forEach(function (acuerdoComercialConRazonSocial) {
                         //     if (acuerdoComercialConRazonSocial.hasOwnProperty("acuerdoComercial") & acuerdoComercialConRazonSocial.hasOwnProperty("razonSocial")) {
         
                         //         if (acuerdoComercialConRazonSocial.acuerdoComercial.proceso.estado === "000" & acuerdoComercialConRazonSocial.razonSocial.proceso.estado === "000") {
@@ -243,58 +276,58 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                         //             acuerdoComercialConRazonSocial = daoCrearRegistros.crearCliente(acuerdoComercialConRazonSocial)
                         //         } 
 
-                        //         contadoracuerdosComercialesConRazonesSociales += 1
+                        //         contadorcluster.proceso.agrupadosAcRs += 1
                                 
                         //         // Crear reporte
-                        //         // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
-                        //         // acuerdosComercialesConRazonesSociales[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(acuerdosComercialesConRazonesSociales[i].razonSocial.proceso)
-                        //         // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
+                        //         // log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
+                        //         // cluster.proceso.agrupadosAcRs[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso)
+                        //         // log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
                         //     } 
 
                         // });
+
+
+                        // for (var index = 0; index < agrupadosAcRs.length; index++) {
+                        //     log.debug("ejecutarTarea - acuerdoComercial", agrupadosAcRs[index].acuerdoComercial)
+                        //     log.debug("ejecutarTarea - razonSocial", agrupadosAcRs[index].razonSocial)  
+                        // }
                         
                         for (var i = 0; i < 5; i++) {
-                            if (acuerdosComercialesConRazonesSociales[i].hasOwnProperty("acuerdoComercial") && acuerdosComercialesConRazonesSociales[i].hasOwnProperty("razonSocial")) {
+                            if (cluster.proceso.agrupadosAcRs[i].hasOwnProperty("acuerdoComercial") && cluster.proceso.agrupadosAcRs[i].hasOwnProperty("razonSocial")) {
         
-                                if (acuerdosComercialesConRazonesSociales[i].acuerdoComercial.proceso.estado === "000" && acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.estado === "000") {
-                                    // Validar existencia de customer en netsuite
-                                    acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.externalId = acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.idCluster + "_" + acuerdosComercialesConRazonesSociales[i].razonSocial.id + "_" + acuerdosComercialesConRazonesSociales[i].acuerdoComercial.id
-                                    var customerExistente = dao.busquedaCustomer(acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.externalId)
+                                if (cluster.proceso.agrupadosAcRs[i].acuerdoComercial.proceso.estado === "000" && cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.estado === "000") {
+                                    cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.externalId = cluster.id + "_" + cluster.proceso.agrupadosAcRs[i].razonSocial.id + "_" + cluster.proceso.agrupadosAcRs[i].acuerdoComercial.id
+                                    var customerExistente = dao.busquedaCustomer(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.externalId)
                                     
                                     if (customerExistente.length > 0) {
-                                        acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.idCustomer = "ya existe registro custumer: " + customerExistente[0].internalId
-                                        acuerdosComercialesConRazonesSociales[i].razonSocial.proceso.entityid = customerExistente[0].internalId
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.idCustomer = "ya existe registro custumer: " + customerExistente[0].internalId
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.entityid = customerExistente[0].internalId
                                     } else {
-                                        // Crear cliente
-                                        acuerdosComercialesConRazonesSociales[i] = daoCrearRegistros.crearCliente(acuerdosComercialesConRazonesSociales[i])
+                                        // Crear customer
+                                        cluster.proceso.agrupadosAcRs[i] = daoCrearRegistros.crearCliente(cluster.proceso.agrupadosAcRs[i])
                                     }
-
-                                    // Crear cliente
-                                    // acuerdosComercialesConRazonesSociales[i] = daoCrearRegistros.crearCliente(acuerdosComercialesConRazonesSociales[i])
         
                                 } 
         
                                 // Crear reporte
-                                log.debug("ejecutarTarea - acuerdoComercial",acuerdosComercialesConRazonesSociales[i].acuerdoComercial)
-                                log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
-                                // acuerdosComercialesConRazonesSociales[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(acuerdosComercialesConRazonesSociales[i].razonSocial.proceso)
-                                // log.debug("ejecutarTarea - razonSocial",acuerdosComercialesConRazonesSociales[i].razonSocial)
+                                log.debug("ejecutarTarea - acuerdoComercial",cluster.proceso.agrupadosAcRs[i].acuerdoComercial)
+                                log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
+                                // cluster.proceso.agrupadosAcRs[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso)
+                                // log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
                                 
                             } 
                         }
                     }
-    
                 } else {
                     // Crear reporte
                     // log.debug("ejecutarTarea - else - cluster - " index,clusters[index])
                     // clusters[index].proceso = daoCrearRegistros.crearReporteAuditoria(clusters[index].proceso)
                 }
-                
-            }
+
+            });
 
         } catch (error) {
             log.error("ejecutarTarea - error", error.message);
-            // var proceso = {}
 
             // // Evaluar el nombre del error y crear reporte
             // if (error.name === "ERROR_PERSONALIZADO") {
