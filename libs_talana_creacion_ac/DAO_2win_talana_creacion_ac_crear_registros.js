@@ -87,8 +87,8 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             log.debug ("crearCliente - bodyFields","custentity_lmry_nomolestar");
             registro.setValue({ fieldId: "custentity_lmry_enimplementacion", value: datos.acuerdoComercial.en_implementacion });
             log.debug ("crearCliente - bodyFields","custentity_lmry_enimplementacion");
-            registro.setValue({ fieldId: "custentity_2winestadoac", value: datos.acuerdoComercial.status }); 
-            log.debug ("crearCliente - bodyFields","custentity_2winestadoac");
+            registro.setValue({ fieldId: "custentity_2winestadoacuerdo", value: datos.acuerdoComercial.status }); // custentity_2winestadoacuerdo, custentity_2winestadoac
+            log.debug ("crearCliente - bodyFields","custentity_2winestadoacuerdo");
             registro.setValue({ fieldId: "custentity_2winonhold", value: datos.acuerdoComercial.on_hold });
             log.debug ("crearCliente - bodyFields","custentity_2winonhold");
             registro.setValue({ fieldId: "custentity_2winmotivoonhold", value: datos.acuerdoComercial.on_hold_reason });
