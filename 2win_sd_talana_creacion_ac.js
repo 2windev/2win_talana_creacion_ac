@@ -292,7 +292,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                         //     log.debug("ejecutarTarea - razonSocial", agrupadosAcRs[index].razonSocial)  
                         // }
                         
-                        for (var i = 0; i < 5; i++) {
+                        for (var i = 0; i < 6; i++) {
                             if (cluster.proceso.agrupadosAcRs[i].hasOwnProperty("acuerdoComercial") && cluster.proceso.agrupadosAcRs[i].hasOwnProperty("razonSocial")) {
         
                                 if (cluster.proceso.agrupadosAcRs[i].acuerdoComercial.proceso.estado === "000" && cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.estado === "000") {
