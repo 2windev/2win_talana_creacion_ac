@@ -3,15 +3,16 @@
  * @NScriptType ScheduledScript
  * @author Sebastian Alayon <sebastian.alayon@2win.cl>
  */
-define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_busquedas.js"], function(https,errorModule,controladorErrores,daoCrearRegistros,dao){
+define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_busquedas.js"], function(https,runtime,errorModule,controladorErrores,daoCrearRegistros,dao){
 
     // Definir variable con datos del proceso
     var proceso = {
+        "nombreProceso": "talana_creacion_ac",
         "datosScript": {},
         "etapa": "",
         "estado": "000",
         "tokenProceso": "", 
-        "resultado": "",
+        "decripcionResultado": "",
     }
 
     /**
@@ -84,8 +85,11 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
      */
     function ejecutarTarea () {
         try {
+            var tokenProceso = dao.obtenerToken();
             proceso.datosScript = controladorErrores.obtenerDatosScript()
+            proceso.scriptId = runtime.getCurrentScript().id
             proceso.etapa = "ejecutarTarea"
+            proceso.tokenProceso = tokenProceso
 
             // Recuperar los cluster y sus datos
             var clusters = [
@@ -100,6 +104,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
             clusters.forEach(cluster => {
                 // Agregar propiedad proceso a cluster
                 cluster.proceso = {
+                    "nombreProceso": "talana_creacion_ac",
                     "idCluster": cluster.id,
                     "api": "acuerdosComerciales",
                     "urlPeticionAcuerdosComerciales": cluster.urlBase + "m_commercialAgreement/",
@@ -109,11 +114,12 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                     "payingCompanys": [],
                     "razonesSociales": [],
                     "agrupadosAcRs": [],
-                    "datosScript": controladorErrores.obtenerDatosScript(),
+                    "datosScript": proceso.datosScript,
+                    "scriptId": runtime.getCurrentScript().id,
                     "etapa": "ejecutarTarea",
                     "estado": "000",
-                    "tokenProceso": "", 
-                    "resultado": "",
+                    "tokenProceso": tokenProceso, 
+                    "decripcionResultado": "",
                 }
 
                 log.debug("ejecutarTarea - cluster", cluster)
@@ -176,15 +182,17 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                         var respuestaDetalleAcuerdoComercial = ejecutarPeticion(urlPeticionDetalleAcuerdoComercial,cluster.token, api)
     
                         respuestaDetalleAcuerdoComercial.proceso = {
+                            "nombreProceso": "talana_creacion_ac",
                             "idCluster": cluster.id,
                             "tokenPeticion": cluster.token,
                             "api": api,
                             "urlPeticionDetalleAcuerdoComercial": urlPeticionDetalleAcuerdoComercial,
-                            "datosScript": controladorErrores.obtenerDatosScript(),
+                            "datosScript": proceso.datosScript,
+                            "scriptId": runtime.getCurrentScript().id,
                             "etapa": "ejecutarTarea",
                             "estado": "000",
-                            "tokenProceso": "", 
-                            "resultado": "",
+                            "tokenProceso": tokenProceso, 
+                            "decripcionResultado": "",
                         }
 
                         // Evaluar si el acuerdo comercial recuperado tiene la propiedad payingCompany
@@ -197,7 +205,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                             }
                         } else {
                             respuestaDetalleAcuerdoComercial.proceso.estado = "002" 
-                            respuestaDetalleAcuerdoComercial.proceso.resultado = "Acuerdo comercial sin payingCompany"
+                            respuestaDetalleAcuerdoComercial.proceso.decripcionResultado = "Acuerdo comercial sin payingCompany"
                         }
     
                         log.debug("ejecutarTarea - respuestaDetalleAcuerdoComercial", respuestaDetalleAcuerdoComercial)
@@ -223,21 +231,24 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                         var respuestaRazonSocial = ejecutarPeticion(urlPeticionRazonSocial,cluster.token,api)
 
                         respuestaRazonSocial.proceso = {
+                            "nombreProceso": "talana_creacion_ac",
                             "idCluster": cluster.id,
-                            "tokenPeticion": cluster.token,
                             "api": api,
                             "urlPeticionRazonSocial": urlPeticionRazonSocial,
+                            "tokenPeticion": cluster.token,
                             "datosScript": controladorErrores.obtenerDatosScript(),
+                            "scriptId": runtime.getCurrentScript().id,
                             "etapa": "ejecutarTarea",
                             "estado": "000",
-                            "tokenProceso": "", 
-                            "resultado": "",
+                            "tokenProceso": tokenProceso,
+                            "decripcionResultado": "",
                         }
 
                         // Evaluar si la razon social recuperada no tiene la propiedad id
                         if (!respuestaRazonSocial.hasOwnProperty("id")) {
+                            respuestaRazonSocial.proceso.etapa = "ejecutarPeticion" 
                             respuestaRazonSocial.proceso.estado = "002" 
-                            respuestaRazonSocial.proceso.resultado = "Razon social sin id" 
+                            respuestaRazonSocial.proceso.decripcionResultado = "Razon social sin id" 
                         } 
 
                         razonesSociales.push(respuestaRazonSocial)
@@ -292,7 +303,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                         //     log.debug("ejecutarTarea - razonSocial", agrupadosAcRs[index].razonSocial)  
                         // }
                         
-                        for (var i = 0; i < 6; i++) {
+                        for (var i = 7; i < 9; i++) {
                             if (cluster.proceso.agrupadosAcRs[i].hasOwnProperty("acuerdoComercial") && cluster.proceso.agrupadosAcRs[i].hasOwnProperty("razonSocial")) {
         
                                 if (cluster.proceso.agrupadosAcRs[i].acuerdoComercial.proceso.estado === "000" && cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.estado === "000") {
@@ -300,7 +311,8 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                                     var customerExistente = dao.busquedaCustomer(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.externalId)
                                     
                                     if (customerExistente.length > 0) {
-                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.idCustomer = "ya existe registro custumer: " + customerExistente[0].internalId
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.tipoRegistroCreado = "customer"
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.idRegistroCreado = "ya existe registro custumer: " + customerExistente[0].internalId
                                         cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.entityid = customerExistente[0].internalId
                                     } else {
                                         // Crear customer
@@ -312,8 +324,10 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                                 // Crear reporte
                                 log.debug("ejecutarTarea - acuerdoComercial",cluster.proceso.agrupadosAcRs[i].acuerdoComercial)
                                 log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
-                                // cluster.proceso.agrupadosAcRs[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso)
-                                // log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
+                                cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.etapa = "crearReporteAuditoria"
+                                cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.decripcionResultado = "OK"
+                                cluster.proceso.agrupadosAcRs[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso)
+                                log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
                                 
                             } 
                         }
@@ -329,16 +343,20 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
         } catch (error) {
             log.error("ejecutarTarea - error", error.message);
 
-            // // Evaluar el nombre del error y crear reporte
-            // if (error.name === "ERROR_PERSONALIZADO") {
-            //     proceso.resultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
-            //     daoCrearRegistros.crearReporteAuditoria(proceso)
-            //     throw error
-            // } else {
-            //     proceso.resultado = error.message 
-            //     daoCrearRegistros.crearReporteAuditoria(proceso)
-            //     throw errorModule.create(controladorErrores.controladorErrores("001","ejecutarTarea",error.message))
-            // } 
+            // Evaluar el nombre del error y crear reporte
+            if (error.name === "ERROR_PERSONALIZADO") {
+                proceso.etapa = error.cause.message.etapa
+                proceso.estado = error.cause.message.code_error
+                proceso.decripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
+                daoCrearRegistros.crearReporteAuditoria(proceso)
+                // throw error
+            } else {
+                proceso.etapa = "ejecutarTarea" 
+                proceso.estado = "001"
+                proceso.decripcionResultado = error.message 
+                daoCrearRegistros.crearReporteAuditoria(proceso)
+                // throw errorModule.create(controladorErrores.controladorErrores("001","ejecutarTarea",error.message))
+            } 
         }
     }
 
