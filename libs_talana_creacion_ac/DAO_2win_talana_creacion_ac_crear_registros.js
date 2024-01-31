@@ -5,6 +5,58 @@
  */
 define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], function(record,format,errorModule,controladorErrores){
 
+    /**
+     * @function crearReporteAuditoria - Crea un nuevo registro en base a los datos recibidos
+     * @param {Object} datos - Datos necesarios para crear el registro
+     * @returns {Number|Error} - id registro creado o mensaje de error
+     */
+    function crearReporteAuditoria(datos) {
+        try {
+            log.debug("crearReporteAuditoria - datos",{
+                "datos": datos,
+                "tipoDato": typeof(datos)
+            })  
+            
+            // Crear el registro
+            var crearRegistro = record.create({ type: "customrecord_2win_auditoria", isDynamic: true }); 
+
+            // Definir Body fields
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_fecha", value: new Date() }); 
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_fecha");
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_proceso", value: datos.nombreProceso });
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_proceso");
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_id_script", value: datos.scriptId  }); 
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_id_script");
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_tipo_registro", value: datos.tipoRegistroCreado }); 
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_tipo_registro");
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_registro_cread", value: datos.idRegistroCreado }); 
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_registro_cread");
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_etapa", value: datos.etapa }); 
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_etapa");
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_estado", value: datos.estado }); 
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_estado");
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_token", value: datos.tokenProceso }); 
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_token");
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_descripcion", value: datos.decripcionResultado }); 
+            log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_descripcion");
+
+            // Guarda registro
+            // var guardarRegistro = crearRegistro.save({ enableSourcing: true});  
+            // log.audit("crearReporteAuditoria - guardarRegistro","Se guardo registro satisfactoriamente: " + guardarRegistro);
+
+            // datos.registroAuditoria = guardarRegistro
+
+            // return datos; 
+        } catch (error) {
+            log.error("crearReporteAuditoria - error", error.message)
+            if (error.name === "ERROR_PERSONALIZADO") {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001","crearReporteAuditoria",error.message))
+            }
+        }
+    }
+    
     /**.
     * @function crearCliente - Crear un nuevo cliente en la tabla customer.
     * @param {Object} datos - Datos para los campos del cliente a crear.
