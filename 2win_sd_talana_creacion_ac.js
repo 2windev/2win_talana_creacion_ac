@@ -3,7 +3,7 @@
  * @NScriptType ScheduledScript
  * @author Sebastian Alayon <sebastian.alayon@2win.cl>
  */
-define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_busquedas.js"], function(https,runtime,errorModule,controladorErrores,daoCrearRegistros,dao){
+define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_busquedas.js"], function(https,errorModule,controladorErrores,daoCrearRegistros,dao){
 
     // Definir variable con datos del proceso
     var proceso = {
@@ -86,19 +86,15 @@ define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlad
     function ejecutarTarea () {
         try {
             var tokenProceso = dao.obtenerToken();
-            proceso.datosScript = controladorErrores.obtenerDatosScript()
-            proceso.scriptId = runtime.getCurrentScript().id
+            var datosScript = controladorErrores.obtenerDatosScript()
+
+            proceso.datosScript = datosScript
+            proceso.scriptId = datosScript.scriptId
             proceso.etapa = "ejecutarTarea"
             proceso.tokenProceso = tokenProceso
 
             // Recuperar los cluster y sus datos
-            var clusters = [
-                {
-                    "id": "CL_Master",
-                    "urlBase": "http://qa-internal.talana.dev/facturacion/api/",
-                    "token": "61bfc7af41f5856a1d7e0d9533b83d0187a57e06",
-                }
-            ]
+            var clusters = dao.busquedaClustersActivos()
 
             // Recorrer cada cluster
             clusters.forEach(cluster => {
@@ -106,6 +102,7 @@ define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlad
                 cluster.proceso = {
                     "nombreProceso": "talana_creacion_ac",
                     "idCluster": cluster.id,
+                    "idSubsidiaria": cluster.idSubsidiaria,
                     "api": "acuerdosComerciales",
                     "urlPeticionAcuerdosComerciales": cluster.urlBase + "m_commercialAgreement/",
                     "tokenPeticion": cluster.token,
@@ -115,14 +112,12 @@ define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlad
                     "razonesSociales": [],
                     "agrupadosAcRs": [],
                     "datosScript": proceso.datosScript,
-                    "scriptId": runtime.getCurrentScript().id,
+                    "scriptId": proceso.scriptId,
                     "etapa": "ejecutarTarea",
                     "estado": "000",
                     "tokenProceso": tokenProceso, 
                     "decripcionResultado": "",
                 }
-
-                log.debug("ejecutarTarea - cluster", cluster)
 
                 // ejecutar peticion para recuperar acuerdos comerciales
                 var respuestaAcuerdosComerciales = ejecutarPeticion(cluster.proceso.urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
@@ -184,11 +179,12 @@ define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlad
                         respuestaDetalleAcuerdoComercial.proceso = {
                             "nombreProceso": "talana_creacion_ac",
                             "idCluster": cluster.id,
+                            "idSubsidiaria": cluster.idSubsidiaria,
                             "tokenPeticion": cluster.token,
                             "api": api,
                             "urlPeticionDetalleAcuerdoComercial": urlPeticionDetalleAcuerdoComercial,
                             "datosScript": proceso.datosScript,
-                            "scriptId": runtime.getCurrentScript().id,
+                            "scriptId": proceso.scriptId,
                             "etapa": "ejecutarTarea",
                             "estado": "000",
                             "tokenProceso": tokenProceso, 
@@ -233,11 +229,12 @@ define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlad
                         respuestaRazonSocial.proceso = {
                             "nombreProceso": "talana_creacion_ac",
                             "idCluster": cluster.id,
+                            "idSubsidiaria": cluster.idSubsidiaria,
                             "api": api,
                             "urlPeticionRazonSocial": urlPeticionRazonSocial,
                             "tokenPeticion": cluster.token,
-                            "datosScript": controladorErrores.obtenerDatosScript(),
-                            "scriptId": runtime.getCurrentScript().id,
+                            "datosScript": datosScript,
+                            "scriptId": proceso.scriptId,
                             "etapa": "ejecutarTarea",
                             "estado": "000",
                             "tokenProceso": tokenProceso,
@@ -303,20 +300,29 @@ define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlad
                         //     log.debug("ejecutarTarea - razonSocial", agrupadosAcRs[index].razonSocial)  
                         // }
                         
-                        for (var i = 7; i < 9; i++) {
+                        for (var i = 0; i < 15; i++) {
                             if (cluster.proceso.agrupadosAcRs[i].hasOwnProperty("acuerdoComercial") && cluster.proceso.agrupadosAcRs[i].hasOwnProperty("razonSocial")) {
         
                                 if (cluster.proceso.agrupadosAcRs[i].acuerdoComercial.proceso.estado === "000" && cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.estado === "000") {
                                     cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.externalId = cluster.id + "_" + cluster.proceso.agrupadosAcRs[i].razonSocial.id + "_" + cluster.proceso.agrupadosAcRs[i].acuerdoComercial.id
+
+                                    // Ejecutar busqueda para determinar si registro ya existe
                                     var customerExistente = dao.busquedaCustomer(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.externalId)
                                     
+                                    // Si el registro ya existe
                                     if (customerExistente.length > 0) {
-                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.tipoRegistroCreado = "customer"
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.tipoRegistroCreado = ""
                                         cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.idRegistroCreado = "ya existe registro custumer: " + customerExistente[0].internalId
                                         cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.entityid = customerExistente[0].internalId
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.decripcionResultado = "custumer ya existe"
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.estado = "001"
+                                        /**@todo - Actualizar registro*/  
+                                        // cluster.proceso.agrupadosAcRs[i] = daoCrearRegistros.actualizarCliente(cluster.proceso.agrupadosAcRs[i])
                                     } else {
                                         // Crear customer
                                         cluster.proceso.agrupadosAcRs[i] = daoCrearRegistros.crearCliente(cluster.proceso.agrupadosAcRs[i])
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.etapa = "crearReporteAuditoria"
+                                        cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.decripcionResultado = "OK"
                                     }
         
                                 } 
@@ -324,8 +330,6 @@ define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlad
                                 // Crear reporte
                                 log.debug("ejecutarTarea - acuerdoComercial",cluster.proceso.agrupadosAcRs[i].acuerdoComercial)
                                 log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
-                                cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.etapa = "crearReporteAuditoria"
-                                cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.decripcionResultado = "OK"
                                 cluster.proceso.agrupadosAcRs[i].razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso)
                                 log.debug("ejecutarTarea - razonSocial",cluster.proceso.agrupadosAcRs[i].razonSocial)
                                 
@@ -334,8 +338,10 @@ define(["N/https","N/runtime","N/error","./libs_talana_creacion_ac/DAO_controlad
                     }
                 } else {
                     // Crear reporte
-                    // log.debug("ejecutarTarea - else - cluster - " index,clusters[index])
-                    // clusters[index].proceso = daoCrearRegistros.crearReporteAuditoria(clusters[index].proceso)
+                    cluster.proceso.etapa = "ejecutarPeticion"
+                    cluster.proceso.estado = "002"
+                    cluster.proceso.decripcionResultado = "Cluster sin acuerdos comerciales: " + JSON.stringify(respuestaAcuerdosComerciales)
+                    cluster.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
                 }
 
             });
