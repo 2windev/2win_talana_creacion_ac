@@ -41,12 +41,12 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_descripcion");
 
             // Guarda registro
-            // var guardarRegistro = crearRegistro.save({ enableSourcing: true});  
-            // log.audit("crearReporteAuditoria - guardarRegistro","Se guardo registro satisfactoriamente: " + guardarRegistro);
+            var guardarRegistro = crearRegistro.save({ enableSourcing: true});  
+            log.audit("crearReporteAuditoria - guardarRegistro","Se guardo registro satisfactoriamente: " + guardarRegistro);
 
-            // datos.registroAuditoria = guardarRegistro
+            datos.registroAuditoria = guardarRegistro
 
-            // return datos; 
+            return datos; 
         } catch (error) {
             log.error("crearReporteAuditoria - error", error.message)
             if (error.name === "ERROR_PERSONALIZADO") {
@@ -56,7 +56,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             }
         }
     }
-    
+
     /**.
     * @function crearCliente - Crear un nuevo cliente en la tabla customer.
     * @param {Object} datos - Datos para los campos del cliente a crear.
@@ -88,6 +88,8 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             // Definir campos registro
             registro.setValue({ fieldId: "entityid", value: datos.razonSocial.proceso.entityid });
             log.debug ("crearCliente - bodyFields","entityid");
+            registro.setValue({ fieldId: "subsidiary", value: datos.razonSocial.proceso.idSubsidiaria });
+            log.debug ("crearCliente - bodyFields","subsidiary");
             registro.setValue({ fieldId: "custentity_tal_rz_pk", value: datos.razonSocial.id });
             log.debug ("crearCliente - bodyFields","custentity_tal_rz_pk");
             registro.setValue({ fieldId: "custentity_lmry_sv_taxpayer_number", value: datos.razonSocial.proceso.taxPayerNumber });
@@ -154,23 +156,27 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             var idCustomer = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
             log.audit("crearCliente - idCustomer", idCustomer)
 
-            datos.razonSocial.proceso.idCustomer = idCustomer
-            datos.razonSocial.proceso.resultado = "OK"
+            datos.razonSocial.proceso.tipoRegistroCreado = "customer"
+            datos.razonSocial.proceso.idRegistroCreado = String(idCustomer)
+            datos.razonSocial.proceso.decripcionResultado = "OK"
             datos.acuerdoComercial.proceso.idCustomer = idCustomer
 
             return datos
         }catch(error){
             log.error("crearCliente - error", error);
 
-            datos.razonSocial.proceso.idCustomer = ""
+            datos.razonSocial.proceso.idRegistroCreado = ""
             datos.razonSocial.proceso.estado = "001"
-            datos.razonSocial.proceso.resultado = error.message
+            datos.razonSocial.proceso.decripcionResultado = error.message
 
             return datos
         }
     }
+
+
     
     return {
+        crearReporteAuditoria: crearReporteAuditoria,
         crearCliente: crearCliente
     }
 });
