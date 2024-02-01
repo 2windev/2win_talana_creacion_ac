@@ -97,7 +97,112 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
         }
     } 
 
+     /**
+     * @description Función que se utiliza para generar Token tabla Auditoria.
+     * @function obtenerToken.
+     */
+     function obtenerToken() {
+        var uuid = "", i, random;
+        for (i = 0; i < 32; i++) {
+            random = Math.random() * 16 | 0;
+
+            if (i == 8 || i == 12 || i == 16 || i == 20) {
+                uuid += "-"
+            }
+            uuid += (i == 12 ? 4 : (i == 16 ? (random & 3 | 8)  : random))
+                .toString(16);
+        }
+        var existsToken = validarToken(uuid);
+
+        if (existsToken.length > 0) obtenerToken();
+        else return uuid;
+    }
+
+    /**
+     * @function validarToken - Función para realizar una busqueda en una tabla de netsuite
+     * @param {string} token - Parametro usado en el filtro de la busqueda
+     * @returns {Array} - Resultado de busqueda
+     */
+    function validarToken(token) {
+        try {
+            // Tipo, filtros y columnas para la busqueda
+            var objSearch = {
+                type: "customrecord_2win_auditoria",
+                filters: [
+                    ["custrecord_2win_auditoria_token", "contains", token]
+                ],
+                columns: [
+                    search.createColumn({ name: "internalid", label: "internal_id" })
+                ]
+            }
+    
+            // Ejecutar busqueda
+            var result = obtenerResultados(objSearch);
+
+            log.audit("validarToken - resultados", {
+                "extencionResultado": result.length,
+                "resultado": result
+            });
+            return result;
+        } catch (error) {
+            log.error("validarToken - error", error.message);
+            if (error.name === 'ERROR_PERSONALIZADO') {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001","validarToken",error.message))
+            }
+        }
+    }
+
+    /**
+     * @function busquedaClustersActivos - Función para realizar una busqueda en una tabla de netsuite
+     * @returns {Array} - Resultado de busqueda
+     */
+    function busquedaClustersActivos() {
+        try {
+            // Tipo, filtros y columnas para la busqueda
+            var objSearch = {
+                type: "customrecord_2win_cluster_talana",
+                filters:[
+                   ["custrecord_2win_cluster_talana_activo","is",true]
+                ],
+                columns:[
+                   search.createColumn({name: "internalid", label: "internalId"}),
+                   search.createColumn({name: "custrecord_2win_cluster_talana_nombre", label: "id" }),
+                   search.createColumn({name: "custrecord_2win_cluster_talana_subsidiar", label: "idSubsidiaria"}), 
+                   search.createColumn({name: "custrecord_2win_cluster_talana_url_base", label: "urlBase"}),
+                   search.createColumn({name: "custrecord_2win_cluster_talana_token", label: "token"}),
+                   search.createColumn({name: "custrecord_2win_cluster_talana_activo", label: "activo"}),
+                   search.createColumn({name: "custrecord_2win_cluster_talana_fecha_act", label: "ultimaFechaActualizacion"}) 
+                ]
+            }
+    
+            // Ejecutar busqueda
+            var result = obtenerResultados(objSearch);
+
+            // Valida que la busqueda retorne resultados
+            if (result.length > 0) {
+                log.audit("busquedaClustersActivos - resultados", {
+                    "extencionResultado": result.length,
+                    "resultado": result
+                });
+                return result;
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("002","busquedaClustersActivos","No se encontro resultados en customrecord_2win_cluster_talana"))
+            }
+        } catch (error) {
+            log.error("busquedaClustersActivos - error", error.message);
+            if (error.name === 'ERROR_PERSONALIZADO') {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001","busquedaClustersActivos",error.message))
+            }
+        }
+    }
+
     return {
         busquedaCustomer:busquedaCustomer,
+        obtenerToken: obtenerToken,
+        busquedaClustersActivos: busquedaClustersActivos
     }
 });
