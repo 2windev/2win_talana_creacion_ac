@@ -48,6 +48,9 @@ define(["N/task","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js
             var tareasIds = []
             var tareasStatus = []
 
+            /**@todo - Eliminar redefinicion de variavle clusters */
+            clusters = [clusters[0]]
+
             // Por cada regsitro de cluster activo recuperado
             clusters.forEach(function (cluster) {
                 // Agregar propiedad proceso a cluster
@@ -113,7 +116,10 @@ define(["N/task","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.js
                     tareasStatus.push(statusTarea)
                 } else {
                     log.audit("ejecutarTarea - statusTarea", statusTarea);
-                    throw errorModule.create(controladorErrores.controladorErrores("001","ejecutarTarea","Error ejecucion tarea para cluster: " + cluster.nombre + " - " + statusTarea))
+                    cluster.proceso.etapa = "ejecutarTarea" 
+                    cluster.proceso.estado = "002"
+                    cluster.proceso.decripcionResultado = "Error ejecucion tarea para cluster: " + cluster.nombre + " - " + JSON.stringify(statusTarea) 
+                    daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
                 }
             });
 
