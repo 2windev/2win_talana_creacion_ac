@@ -101,7 +101,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                 // Agregar propiedad proceso a cluster
                 cluster.proceso = {
                     "nombreProceso": "talana_creacion_ac",
-                    "idCluster": cluster.id,
+                    "nombreCluster": cluster.nombre,
                     "idSubsidiaria": cluster.idSubsidiaria,
                     "api": "acuerdosComerciales",
                     "urlPeticionAcuerdosComerciales": cluster.urlBase + "m_commercialAgreement/",
@@ -119,7 +119,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                     "decripcionResultado": "",
                 }
 
-                // ejecutar peticion para recuperar acuerdos comerciales
+                // Ejecutar peticion para recuperar acuerdos comerciales
                 var respuestaAcuerdosComerciales = ejecutarPeticion(cluster.proceso.urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
 
                 // Array que almacenara los acuerdos comerciales recuperados
@@ -137,14 +137,14 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                     });
 
                     var contador = 0
-                    /**@todo - Reemplazar: contador < 2 por respuestaAcuerdosComerciales.next !== null */
+                    /**@todo - Reemplazar: contador < 2 por: respuestaAcuerdosComerciales.next !== null */
                     // Mientras existan mas paginas
-                    while (contador < 3) { // respuestaAcuerdosComerciales.next !== null
+                    while (contador < 3) { 
+                        // Definir url y ejecutar peticion para recuperar siguiente pagina de acuerdos comerciales
                         cluster.proceso.urlPeticionAcuerdosComerciales = respuestaAcuerdosComerciales.next
-                        // ejecutar peticion para recuperar siguiente paginaacuerdos comerciales
                         respuestaAcuerdosComerciales = ejecutarPeticion(cluster.proceso.urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
 
-                        // Evaluar si la propiedad results de la respuesta tiene elemetos
+                        // Evaluar si la propiedad results de la respuesta tiene elementos
                         if (respuestaAcuerdosComerciales.results.length > 0) {
                             respuestaAcuerdosComerciales.results.forEach(function (acuerdoComercial) {
                                 acuerdoComercial.proceso = cluster.proceso
@@ -178,7 +178,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
     
                         respuestaDetalleAcuerdoComercial.proceso = {
                             "nombreProceso": "talana_creacion_ac",
-                            "idCluster": cluster.id,
+                            "nombreCluster": cluster.nombre,
                             "idSubsidiaria": cluster.idSubsidiaria,
                             "tokenPeticion": cluster.token,
                             "api": api,
@@ -193,10 +193,9 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
 
                         // Evaluar si el acuerdo comercial recuperado tiene la propiedad payingCompany
                         if (respuestaDetalleAcuerdoComercial.hasOwnProperty("payingCompany") ) {
-                            // Aislar payingCompany
-                            // Comprobar si el elemento ya existe en el array
+                            // Comprobar si la payingCompany ya existe dentro del array
                             if (!payingCompanys.includes(respuestaDetalleAcuerdoComercial.payingCompany)) {
-                                // Si no existe, agregarlo al array
+                                // Si no existe, agregarla
                                 payingCompanys.push(respuestaDetalleAcuerdoComercial.payingCompany);
                             }
                         } else {
@@ -228,7 +227,7 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
 
                         respuestaRazonSocial.proceso = {
                             "nombreProceso": "talana_creacion_ac",
-                            "idCluster": cluster.id,
+                            "nombreCluster": cluster.nombre,
                             "idSubsidiaria": cluster.idSubsidiaria,
                             "api": api,
                             "urlPeticionRazonSocial": urlPeticionRazonSocial,
@@ -252,8 +251,10 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
 
                         // Recorrer acuerdos comerciales recuperados
                         cluster.proceso.acuerdosComercialesConDetalle.forEach(acuerdoComercialConDetalle => {
+                            // Evaluar si el acuerdo comercial tiene esta payingCompany
                             if (acuerdoComercialConDetalle.payingCompany === respuestaRazonSocial.id) {
-                                respuestaRazonSocial.proceso.externalId = cluster.id + "_" + respuestaRazonSocial.id + "_" + acuerdoComercialConDetalle.id
+                                respuestaRazonSocial.proceso.externalId = cluster.nombre + "_" + respuestaRazonSocial.id + "_" + acuerdoComercialConDetalle.id
+                                // Agrupar el acurdo comercial y la razon social en un objeto
                                 var objetoDatosParaCustomer = {
                                     "acuerdoComercial": acuerdoComercialConDetalle,
                                     "razonSocial": respuestaRazonSocial
@@ -300,11 +301,12 @@ define(["N/https","N/error","./libs_talana_creacion_ac/DAO_controlador_errores.j
                         //     log.debug("ejecutarTarea - razonSocial", agrupadosAcRs[index].razonSocial)  
                         // }
                         
-                        for (var i = 0; i < 15; i++) {
+                        for (var i = 0; i < 17; i++) {
                             if (cluster.proceso.agrupadosAcRs[i].hasOwnProperty("acuerdoComercial") && cluster.proceso.agrupadosAcRs[i].hasOwnProperty("razonSocial")) {
         
                                 if (cluster.proceso.agrupadosAcRs[i].acuerdoComercial.proceso.estado === "000" && cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.estado === "000") {
-                                    cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.externalId = cluster.id + "_" + cluster.proceso.agrupadosAcRs[i].razonSocial.id + "_" + cluster.proceso.agrupadosAcRs[i].acuerdoComercial.id
+                                    // Definir el externalId
+                                    cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.externalId = cluster.nombre + "_" + cluster.proceso.agrupadosAcRs[i].razonSocial.id + "_" + cluster.proceso.agrupadosAcRs[i].acuerdoComercial.id
 
                                     // Ejecutar busqueda para determinar si registro ya existe
                                     var customerExistente = dao.busquedaCustomer(cluster.proceso.agrupadosAcRs[i].razonSocial.proceso.externalId)

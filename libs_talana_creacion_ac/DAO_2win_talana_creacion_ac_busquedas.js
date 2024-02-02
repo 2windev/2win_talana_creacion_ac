@@ -168,7 +168,7 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
                 ],
                 columns:[
                    search.createColumn({name: "internalid", label: "internalId"}),
-                   search.createColumn({name: "custrecord_2win_cluster_talana_nombre", label: "id" }),
+                   search.createColumn({name: "custrecord_2win_cluster_talana_nombre", label: "nombre" }),
                    search.createColumn({name: "custrecord_2win_cluster_talana_subsidiar", label: "idSubsidiaria"}), 
                    search.createColumn({name: "custrecord_2win_cluster_talana_url_base", label: "urlBase"}),
                    search.createColumn({name: "custrecord_2win_cluster_talana_token", label: "token"}),

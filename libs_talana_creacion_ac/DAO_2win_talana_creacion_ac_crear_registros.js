@@ -71,7 +71,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
 
             // Definir valores para campos del registro
             datos.razonSocial.proceso.etapa = "crearCliente"
-            datos.razonSocial.proceso.externalId = datos.razonSocial.proceso.idCluster + "_" + datos.razonSocial.id + "_" + datos.acuerdoComercial.id
+            datos.razonSocial.proceso.externalId = datos.razonSocial.proceso.nombreCluster + "_" + datos.razonSocial.id + "_" + datos.acuerdoComercial.id
             datos.razonSocial.proceso.entityid = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.razonSocial.proceso.taxPayerNumber = datos.razonSocial.rut.slice(0, -2);
             datos.razonSocial.proceso.companyname = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
