@@ -15,7 +15,8 @@ Descripcion de proyecto
 
 - Tablas Personalizadas
 ​
-    1. [Nombre tabla](link a tabla)
+    1. [cluster talana](https://7583958-sb1.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=981)
+    1. [2win auditoria](https://7583958-sb1.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=980)
 
 - Tabla
 
@@ -42,7 +43,7 @@ Descripcion de proyecto
 
 - Librerías
 ​
-    - [DAO_2win_talana_creacion_ac_buquedas.js](./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_busquedas.js)
+    - [DAO_2win_talana_creacion_ac.js](./libs_talana_creacion_ac//DAO_2win_talana_creacion_ac.js)
         - Descripcion
             - Contiene funciones para buscar en tablas especificas de netsuite.
     - [DAO_2win_talana_creacion_ac_crear_registros.js](./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js)
@@ -52,3 +53,6 @@ Descripcion de proyecto
         - Descripcion
             - Contiene funciones para determinar la estructura de un error y recuperar datos del script en ejecucion.
 
+- Documento test - metricas:
+
+    - [Nombre documento test](Link a documento de test)
