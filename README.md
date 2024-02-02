@@ -53,6 +53,3 @@ Descripcion de proyecto
         - Descripcion
             - Contiene funciones para determinar la estructura de un error y recuperar datos del script en ejecucion.
 
-- Documento test - metricas:
-
-    - [Nombre documento test](Link a documento de test)
