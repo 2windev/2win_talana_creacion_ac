@@ -3,7 +3,7 @@
  * @NScriptType MapReduceScript
  * @author Sebastian Alayon <sebastian.alayon@2win.cl>
  */
-define(["N/runtime","N/https","N/record","N/task","N/error","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_busquedas.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js","./libs_talana_creacion_ac/DAO_controlador_errores.js"], function(runtime,https,record,task,errorModule,dao,daoCrearRegistros,controladorErrores) {
+define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_busquedas.js","./libs_talana_creacion_ac/DAO_2win_talana_creacion_ac_crear_registros.js","./libs_talana_creacion_ac/DAO_controlador_errores.js"], function(runtime,https,task,errorModule,dao,daoCrearRegistros,controladorErrores) {
 
     /**
      * @function ejecutarPeticion - Realiza peticion a api.
@@ -47,14 +47,6 @@ define(["N/runtime","N/https","N/record","N/task","N/error","./libs_talana_creac
                 // log.debug("ejecutarPeticion - bodyParseado",bodyParseado );
                 return bodyParseado
             } else {
-                // if (api === "detalleAcuerdoComercial" || api === "razonSocial") {
-                //     // Parsear cuerpo respuesta
-                //     var bodyParseado = JSON.parse(respuesta.body)
-                //     log.error("ejecutarPeticion - error",bodyParseado );
-                //     return bodyParseado
-                // } else {
-                //     throw errorModule.create(controladorErrores.controladorErrores("002","ejecutarPeticion","Codigo de respuesta: " + respuesta.code + " a peticion: " + urlhttps + " respuesta: " + respuesta.body))
-                // }
                 throw errorModule.create(controladorErrores.controladorErrores("002","ejecutarPeticion","Codigo de respuesta: " + respuesta.code + " a peticion: " + urlhttps + " respuesta: " + respuesta.body))
             }
         } catch (error) {
@@ -104,7 +96,7 @@ define(["N/runtime","N/https","N/record","N/task","N/error","./libs_talana_creac
                 /**@todo - Reemplazar: contador < 2 por respuestaAcuerdosComerciales.next !== null */
                 var contador = 0
                 // Mientras existan mas paginas
-                while (contador < 50) { 
+                while (respuestaAcuerdosComerciales.next !== null) { 
                     // Definir url y ejecutar peticion para recuperar siguiente pagina de acuerdos comerciales
                     var urlPeticionAcuerdosComerciales = respuestaAcuerdosComerciales.next
                     respuestaAcuerdosComerciales = ejecutarPeticion(urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
@@ -354,19 +346,20 @@ define(["N/runtime","N/https","N/record","N/task","N/error","./libs_talana_creac
             cluster.proceso.etapa = "summarize"
             var proceso = cluster.proceso
 
-            // var registrosAuditoria = {};
-            // registrosAuditoria[cluster.nombre] = []
-            // Operar soobre los pares key-value pasados desde el reduce 
-            // summary.output.iterator().each(function(key, value) {
-            //     var value = JSON.parse(value)
-            //     registrosAuditoria[key].push({
-            //         "idRegistroCreado": value.idRegistroCreado,
-            //         "registroAuditoria": value.registroAuditoria
-            //     });
-            //     return true;
-            // });
-            // log.debug("summarize - registrosAuditoria", registrosAuditoria)
-            // log.debug("summarize - registrosAuditoria - " + cluster.nombre, registrosAuditoria[cluster.nombre].length)
+            var registrosCreados = {};
+            registrosCreados[cluster.nombre] = []
+
+            // Recuperar a los pares key-value pasados desde el reduce 
+            summary.output.iterator().each(function(key, value) {
+                var value = JSON.parse(value)
+                registrosCreados[key].push({
+                    "idRegistroCreado": value.idRegistroCreado,
+                    "registroAuditoria": value.registroAuditoria
+                });
+                return true;
+            });
+            log.debug("summarize - registrosCreados", registrosCreados)
+            log.debug("summarize - registrosCreados - " + cluster.nombre, registrosCreados[cluster.nombre].length)
 
             // Recuperar errores
             summary.mapSummary.errors.iterator().each(function(key, value) {
@@ -384,9 +377,9 @@ define(["N/runtime","N/https","N/record","N/task","N/error","./libs_talana_creac
             var scriptObj = runtime.getCurrentScript();
             log.debug("summarize - unidades restantes: ", scriptObj.getRemainingUsage())
 
+            // Sumar 1 al numero de ejecucion y enviar tarea al script scheduled
             cluster.proceso.numeroEjecucion += 1
             if (cluster.proceso.numeroEjecucion < cluster.proceso.numeroMaximoEjecuciones) {
-                
                 var tarea = task.create({
                     taskType: task.TaskType.SCHEDULED_SCRIPT,
                     scriptId: "customscript_2win_sd_talana_creacion_ac",  
@@ -395,6 +388,7 @@ define(["N/runtime","N/https","N/record","N/task","N/error","./libs_talana_creac
                         "custscript_sd_talana_creacion_ac_ejecuci": cluster.proceso.numeroEjecucion
                     }
                 });
+                log.audit("ejecutarTarea - tarea",  tarea)
     
                 // Enviar tarea
                 var tareaId = tarea.submit();
