@@ -25,9 +25,9 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
             
             if (!numeroEjecucion) {
                 numeroEjecucion = 0
+                log.debug("ejecutarTarea - if - numeroEjecucion", numeroEjecucion)
             }
             
-            log.debug("ejecutarTarea - numeroEjecucion", numeroEjecucion)
 
             var tokenProceso = dao.obtenerToken();
             var datosScript = controladorErrores.obtenerDatosScript()
@@ -42,9 +42,6 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
 
             // Declarar variable que monitoreara el status de la tarea
             var statusTarea;
-
-            /**@todo - Eliminar redefinicion de variable clusters */
-            // clusters = [clusters[0]]
 
             if (numeroEjecucion < clusters.length) {
                 
@@ -80,9 +77,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
                         "custscript_mr_talana_creacion_ac_cluster": clusters[numeroEjecucion]
                     }
                 });
-
                 log.audit("ejecutarTarea - tarea",  tarea)
-                log.audit("ejecutarTarea - proceso", proceso)
     
                 // Enviar tarea
                 var tareaId = tarea.submit();
