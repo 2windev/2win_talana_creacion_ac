@@ -37,7 +37,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_estado");
             crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_token", value: datos.tokenProceso }); 
             log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_token");
-            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_descripcion", value: datos.decripcionResultado }); 
+            crearRegistro.setValue({ fieldId: "custrecord_2win_auditoria_descripcion", value: datos.descripcionResultado }); 
             log.debug("crearReporteAuditoria - bodyFields","custrecord_2win_auditoria_descripcion");
 
             // Guarda registro
@@ -74,13 +74,13 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             datos.razonSocial.proceso.externalId = datos.razonSocial.proceso.nombreCluster + "_" + datos.razonSocial.id + "_" + datos.acuerdoComercial.id
             datos.razonSocial.proceso.entityid = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.razonSocial.proceso.taxPayerNumber = datos.razonSocial.rut.slice(0, -2);
+            datos.acuerdoComercial.proceso.emails = datos.acuerdoComercial.emails.split(/[;,]/);
+            datos.acuerdoComercial.proceso.email = datos.acuerdoComercial.proceso.emails[0]
             datos.razonSocial.proceso.companyname = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.razonSocial.proceso.digitoVerificador = datos.razonSocial.rut[datos.razonSocial.rut.length - 1]
             datos.razonSocial.proceso.addressee = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.acuerdoComercial.proceso.detalleAcuerdoComercial = `<p>Acuerdo comercial № ${datos.acuerdoComercial.id} <br>Razón social pagadora № ${datos.razonSocial.id} ${datos.razonSocial.rut} ${datos.razonSocial.razonSocial}<br></p><p> Plan Contratado: True </p><p>BillingCycle: ${datos.acuerdoComercial.billingCycle}</p><p> Notas: ${datos.acuerdoComercial.notes}</p><p>Plan Contratado: <pre>${datos.acuerdoComercial.hired_plan}</pre> </p>`
 
-            log.debug("crearCliente - datos.razonSocial", datos.razonSocial)
-            log.debug("crearCliente - datos.acuerdoComercial", datos.acuerdoComercial)
 
             // Crear registro
             var registro = record.create({ type : record.Type.CUSTOMER, isDynamic: true })
@@ -124,19 +124,26 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             // log.debug("crearCliente - linea","campo - state");
             addressSubrecord.setValue({ fieldId: "country", value: "CL" });
             log.debug("crearCliente - linea","campo - country");
-            addressSubrecord.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
-            log.debug("crearCliente - linea","campo - phone");
+
+            // Verificar extencion del numero telefonico
+            if (datos.razonSocial.telefono.length >= 7) {
+                addressSubrecord.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
+                log.debug("crearCliente - linea","campo - phone");
+                registro.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
+                log.debug ("crearCliente - bodyFields","phone");
+            }
             lineaRegistro.commitLine({ sublistId: 'addressbook' });
             log.debug("crearCliente - lineaRegistro", "Se guardo linea addressbook");
-
-            registro.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
-            log.debug ("crearCliente - bodyFields","phone");
             registro.setValue({ fieldId: "custentity_tal_ca_pk", value: datos.acuerdoComercial.id }); 
             log.debug ("crearCliente - bodyFields","custentity_tal_ca_pk");
-            registro.setValue({ fieldId: "email", value: datos.acuerdoComercial.emails }); 
+            registro.setValue({ fieldId: "email", value: datos.acuerdoComercial.proceso.email }); 
             log.debug ("crearCliente - bodyFields","email");
-            registro.setValue({ fieldId: "comments", value: datos.acuerdoComercial.notes }); 
-            log.debug ("crearCliente - bodyFields","comments");
+
+            // Verificar extencion de las notas
+            if (datos.acuerdoComercial.notes.length < 999) {
+                registro.setValue({ fieldId: "comments", value: datos.acuerdoComercial.notes }); 
+                log.debug ("crearCliente - bodyFields","comments");
+            }
             registro.setValue({ fieldId: "custentity_lmry_nomolestar", value: datos.acuerdoComercial.no_molestar });
             log.debug ("crearCliente - bodyFields","custentity_lmry_nomolestar");
             registro.setValue({ fieldId: "custentity_lmry_enimplementacion", value: datos.acuerdoComercial.en_implementacion });
@@ -158,18 +165,18 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
 
             datos.razonSocial.proceso.tipoRegistroCreado = "customer"
             datos.razonSocial.proceso.idRegistroCreado = String(idCustomer)
-            datos.razonSocial.proceso.decripcionResultado = "OK"
+            datos.razonSocial.proceso.descripcionResultado = "Procesado"
             datos.acuerdoComercial.proceso.idCustomer = idCustomer
 
             return datos
         }catch(error){
             log.error("crearCliente - error", error);
 
-            datos.razonSocial.proceso.idRegistroCreado = ""
-            datos.razonSocial.proceso.estado = "001"
-            datos.razonSocial.proceso.decripcionResultado = error.message
-
-            return datos
+            if (error.name === "ERROR_PERSONALIZADO") {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001","crearCliente",error.message))
+            }
         }
     }
 
