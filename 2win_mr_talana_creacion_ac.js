@@ -37,14 +37,12 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 url: urlhttps,
                 headers: headerObj 
             });
-            
             log.audit("ejecutarPeticion - respuesta", respuesta);
             
             // Validar codigo de respuesta 
             if (respuesta.code === 200) {
                 // Parsear cuerpo respuesta
                 var bodyParseado = JSON.parse(respuesta.body)
-                // log.debug("ejecutarPeticion - bodyParseado",bodyParseado );
                 return bodyParseado
             } else {
                 throw errorModule.create(controladorErrores.controladorErrores("002","ejecutarPeticion","Codigo de respuesta: " + respuesta.code + " a peticion: " + urlhttps + " respuesta: " + respuesta.body))
@@ -96,7 +94,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 /**@todo - Reemplazar: contador < 2 por respuestaAcuerdosComerciales.next !== null */
                 var contador = 0
                 // Mientras existan mas paginas
-                while (respuestaAcuerdosComerciales.next !== null) { 
+                while (contador < 2) { 
                     // Definir url y ejecutar peticion para recuperar siguiente pagina de acuerdos comerciales
                     var urlPeticionAcuerdosComerciales = respuestaAcuerdosComerciales.next
                     respuestaAcuerdosComerciales = ejecutarPeticion(urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
@@ -122,14 +120,17 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
 
                 log.debug("getInputData - acuerdosComercialesEx", acuerdosComerciales.length)
                 log.debug("getInputData - acuerdosComerciales - " + 1, acuerdosComerciales[1])
+
                 return acuerdosComerciales
             } else {
                 // Crear reporte
                 cluster.proceso.etapa = "ejecutarPeticion"
                 cluster.proceso.estado = "002"
-                cluster.proceso.decripcionResultado = "Cluster sin acuerdos comerciales: " + JSON.stringify(respuestaAcuerdosComerciales)
+                cluster.proceso.descripcionResultado = "Cluster sin acuerdos comerciales: " + JSON.stringify(respuestaAcuerdosComerciales)
                 cluster.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
             }
+
+            return cluster
 
         } catch (error) {
             log.error("getInputData - error", error.message);
@@ -138,13 +139,13 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             if (error.name === "ERROR_PERSONALIZADO") {
                 cluster.proceso.etapa = error.cause.message.etapa
                 cluster.proceso.estado = error.cause.message.code_error
-                cluster.proceso.decripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
+                cluster.proceso.descripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
                 daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
                 throw error
             } else {
                 cluster.proceso.etapa = "getInputData" 
                 cluster.proceso.estado = "001"
-                cluster.proceso.decripcionResultado = error.message 
+                cluster.proceso.descripcionResultado = error.message 
                 daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
                 throw errorModule.create(controladorErrores.controladorErrores("001","getInputData",error.message))
             } 
