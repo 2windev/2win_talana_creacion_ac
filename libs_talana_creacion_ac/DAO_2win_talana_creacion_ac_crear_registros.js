@@ -80,7 +80,20 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             datos.razonSocial.proceso.digitoVerificador = datos.razonSocial.rut[datos.razonSocial.rut.length - 1]
             datos.razonSocial.proceso.addressee = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.acuerdoComercial.proceso.detalleAcuerdoComercial = `<p>Acuerdo comercial № ${datos.acuerdoComercial.id} <br>Razón social pagadora № ${datos.razonSocial.id} ${datos.razonSocial.rut} ${datos.razonSocial.razonSocial}<br></p><p> Plan Contratado: True </p><p>BillingCycle: ${datos.acuerdoComercial.billingCycle}</p><p> Notas: ${datos.acuerdoComercial.notes}</p><p>Plan Contratado: <pre>${datos.acuerdoComercial.hired_plan}</pre> </p>`
+            
+            // Verificar extension de entityid
+            if (datos.razonSocial.proceso.entityid.length > 83) {
+                // Corta la cadena para que tenga como máximo 83 caracteres
+                datos.razonSocial.proceso.entityid = datos.razonSocial.proceso.entityid.substring(0, 83);
+                datos.razonSocial.proceso.companyname = datos.razonSocial.proceso.companyname.substring(0, 83);
+            }
 
+            // Verificar extension de las notas
+            if (datos.acuerdoComercial.notes.length > 998) {
+                // Corta la cadena para que tenga como máximo 998 caracteres
+                datos.acuerdoComercial.notes = datos.acuerdoComercial.notes.substring(0, 998);
+
+            } 
 
             // Crear registro
             var registro = record.create({ type : record.Type.CUSTOMER, isDynamic: true })
@@ -125,7 +138,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             addressSubrecord.setValue({ fieldId: "country", value: "CL" });
             log.debug("crearCliente - linea","campo - country");
 
-            // Verificar extencion del numero telefonico
+            // Verificar extension del numero telefonico
             if (datos.razonSocial.telefono.length >= 7) {
                 addressSubrecord.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
                 log.debug("crearCliente - linea","campo - phone");
@@ -138,8 +151,6 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             log.debug ("crearCliente - bodyFields","custentity_tal_ca_pk");
             registro.setValue({ fieldId: "email", value: datos.acuerdoComercial.proceso.email }); 
             log.debug ("crearCliente - bodyFields","email");
-
-            // Verificar extencion de las notas
             if (datos.acuerdoComercial.notes.length < 999) {
                 registro.setValue({ fieldId: "comments", value: datos.acuerdoComercial.notes }); 
                 log.debug ("crearCliente - bodyFields","comments");
@@ -179,8 +190,6 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             }
         }
     }
-
-
     
     return {
         crearReporteAuditoria: crearReporteAuditoria,
