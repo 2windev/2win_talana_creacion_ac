@@ -197,7 +197,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 "etapa": "map",
                 "estado": "000",
                 "tokenProceso": tokenProceso, 
-                "decripcionResultado": "",
+                "descripcionResultado": "",
             }
 
             // Evaluar si el detalle recuperado tiene la propiedad payingCompany
@@ -221,14 +221,14 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                     "etapa": "map",
                     "estado": "000",
                     "tokenProceso": tokenProceso,
-                    "decripcionResultado": "",
+                    "descripcionResultado": "",
                 }
 
                 // Evaluar si la razon social recuperada no tiene la propiedad id
                 if (!respuestaRazonSocial.hasOwnProperty("id")) {
                     respuestaRazonSocial.proceso.etapa = "ejecutarPeticion" 
                     respuestaRazonSocial.proceso.estado = "002" 
-                    respuestaRazonSocial.proceso.decripcionResultado = "Razon social: " +  JSON.stringify(respuestaRazonSocial) + " sin id"
+                    respuestaRazonSocial.proceso.descripcionResultado = "Razon social: " +  JSON.stringify(respuestaRazonSocial) + " sin id"
                     throw errorModule.create(controladorErrores.controladorErrores("002","map","Razon social: " +  JSON.stringify(respuestaRazonSocial) + " sin id")) 
                 }
 
@@ -236,7 +236,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 acRs.razonSocial = respuestaRazonSocial
             } else {
                 respuestaDetalleAcuerdoComercial.proceso.estado = "002" 
-                respuestaDetalleAcuerdoComercial.proceso.decripcionResultado = "Acuerdo comercial: " +  JSON.stringify(respuestaDetalleAcuerdoComercial) + " sin payingCompany"
+                respuestaDetalleAcuerdoComercial.proceso.descripcionResultado = "Acuerdo comercial: " +  JSON.stringify(respuestaDetalleAcuerdoComercial) + " sin payingCompany"
                 throw errorModule.create(controladorErrores.controladorErrores("002","map","Acuerdo comercial: " +  JSON.stringify(respuestaDetalleAcuerdoComercial) + " sin payingCompany")) 
             } 
             cluster.acuerdoComercial = respuestaDetalleAcuerdoComercial
@@ -251,14 +251,14 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             if (error.name === "ERROR_PERSONALIZADO") {
                 cluster.proceso.etapa = error.cause.message.etapa
                 cluster.proceso.estado = error.cause.message.code_error
-                cluster.proceso.decripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
+                cluster.proceso.descripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
                 cluster.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
                 // context.write(cluster.cluster.proceso.nombreCluster, cluster.cluster.proceso.registroAuditoria);
                 // throw error
             } else {
                 cluster.proceso.etapa = "map" 
                 cluster.proceso.estado = "001"
-                cluster.proceso.decripcionResultado = error.message 
+                cluster.proceso.descripcionResultado = error.message 
                 cluster.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
                 // context.write(cluster.cluster.proceso.nombreCluster, cluster.cluster.proceso.registroAuditoria);
                 // throw errorModule.create(controladorErrores.controladorErrores("001","map",error.message))
@@ -273,7 +273,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
     function reduce(context) {
         try {   
             log.debug("reduce - context", context);
-            log.debug("reduce - values - extencion", context.values.length);
+            log.debug("reduce - values", context.values);
 
             // Parsear value de reduce
             var acRs = JSON.parse(context.values[0]);
@@ -292,14 +292,12 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                     acRs.razonSocial.proceso.tipoRegistroCreado = ""
                     acRs.razonSocial.proceso.idRegistroCreado = "ya existe registro custumer: " + customerExistente[0].internalId
                     acRs.razonSocial.proceso.entityid = customerExistente[0].internalId
-                    acRs.razonSocial.proceso.decripcionResultado = "custumer ya existe"
+                    acRs.razonSocial.proceso.descripcionResultado = "custumer ya existe"
                     /**@todo - Actualizar registro*/  
                     // acRs = daoCrearRegistros.actualizarCliente(acRs)
                 } else {
                     // Crear registro customer
                     acRs = daoCrearRegistros.crearCliente(acRs)
-                    acRs.razonSocial.proceso.etapa = "crearReporteAuditoria"
-                    acRs.razonSocial.proceso.decripcionResultado = "OK"
                 }
 
                 // Crear reporte
@@ -314,14 +312,14 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             if (error.name === "ERROR_PERSONALIZADO") {
                 acRs.razonSocial.proceso.etapa = error.cause.message.etapa
                 acRs.razonSocial.proceso.estado = error.cause.message.code_error
-                acRs.razonSocial.proceso.decripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
+                acRs.razonSocial.proceso.descripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
                 acRs.razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(acRs.razonSocial.proceso)
                 context.write(acRs.razonSocial.proceso.nombreCluster, acRs.razonSocial.proceso);
                 // throw error
             } else {
                 acRs.razonSocial.proceso.etapa = "reduce" 
                 acRs.razonSocial.proceso.estado = "001"
-                acRs.razonSocial.proceso.decripcionResultado = error.message 
+                acRs.razonSocial.proceso.descripcionResultado = error.message 
                 acRs.razonSocial.proceso = daoCrearRegistros.crearReporteAuditoria(acRs.razonSocial.proceso)
                 context.write(acRs.razonSocial.proceso.nombreCluster, acRs.razonSocial.proceso);
                 // throw errorModule.create(controladorErrores.controladorErrores("001","reduce",error.message))
@@ -388,15 +386,15 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                         "custscript_sd_talana_creacion_ac_ejecuci": cluster.proceso.numeroEjecucion
                     }
                 });
-                log.audit("ejecutarTarea - tarea",  tarea)
+                log.audit("summarize - tarea",  tarea)
     
                 // Enviar tarea
                 var tareaId = tarea.submit();
-                log.debug("ejecutarTarea - tareaId", tareaId)
+                log.debug("summarize - tareaId", tareaId)
     
                 // Monitoreo tarea
                 var statusTarea = task.checkStatus({ taskId: tareaId });
-                log.audit("ejecutarTarea - statusTarea", statusTarea);
+                log.audit("summarize - statusTarea", statusTarea);
             }
 
         } catch (error) {
@@ -406,13 +404,13 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             if (error.name === "ERROR_PERSONALIZADO") {
                 cluster.proceso.etapa = error.cause.message.etapa
                 cluster.proceso.estado = error.cause.message.code_error
-                cluster.proceso.decripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
+                cluster.proceso.descripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
                 daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
                 // throw error
             } else {
                 cluster.proceso.etapa = "summarize" 
                 cluster.proceso.estado = "001"
-                cluster.proceso.decripcionResultado = error.message 
+                cluster.proceso.descripcionResultado = error.message 
                 daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
                 // throw errorModule.create(controladorErrores.controladorErrores("001","summarize",error.message))
             }
