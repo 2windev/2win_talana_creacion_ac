@@ -12,7 +12,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
         "etapa": "",
         "estado": "000",
         "tokenProceso": "", 
-        "decripcionResultado": "",
+        "descripcionResultado": "",
     }
 
     /**
@@ -64,7 +64,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
                     "etapa": "ejecutarTarea",
                     "estado": "000",
                     "tokenProceso": tokenProceso, 
-                    "decripcionResultado": "",
+                    "descripcionResultado": "",
                 }
                 log.debug("ejecutarTarea - cluster", clusters[numeroEjecucion])
 
@@ -95,13 +95,13 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
             if (error.name === "ERROR_PERSONALIZADO") {
                 proceso.etapa = error.cause.message.etapa
                 proceso.estado = error.cause.message.code_error
-                proceso.decripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
+                proceso.descripcionResultado = error.cause.message.code_desc + " " + error.cause.message.data.error 
                 daoCrearRegistros.crearReporteAuditoria(proceso)
                 throw error
             } else {
                 proceso.etapa = "ejecutarTarea" 
                 proceso.estado = "001"
-                proceso.decripcionResultado = error.message 
+                proceso.descripcionResultado = error.message 
                 daoCrearRegistros.crearReporteAuditoria(proceso)
                 throw errorModule.create(controladorErrores.controladorErrores("001","ejecutarTarea",error.message))
             } 
