@@ -94,7 +94,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 /**@todo - Reemplazar: contador < 2 por respuestaAcuerdosComerciales.next !== null */
                 var contador = 0
                 // Mientras existan mas paginas
-                while (contador < 2) { 
+                while (respuestaAcuerdosComerciales.next !== null) { 
                     // Definir url y ejecutar peticion para recuperar siguiente pagina de acuerdos comerciales
                     var urlPeticionAcuerdosComerciales = respuestaAcuerdosComerciales.next
                     respuestaAcuerdosComerciales = ejecutarPeticion(urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
@@ -274,7 +274,10 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
     function reduce(context) {
         try {   
             log.debug("reduce - context", context);
-            log.debug("reduce - values", context.values);
+            log.debug("reduce - values", {
+                "extension": context.values.length,
+                "values": context.values
+            });
 
             // Parsear value de reduce
             var acRs = JSON.parse(context.values[0]);
