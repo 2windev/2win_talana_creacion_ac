@@ -15,7 +15,6 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
             log.audit("obtenerResultados - createSearch", {
                 "type": createSearch.type,
                 "filters": createSearch.filters,
-                "tipoDato": typeof(createSearch)
             })
 
             // Array que almacenara resultados
@@ -38,7 +37,6 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
                 searchResults.push(objectCompiled);
                 return true;
             });
-            log.debug("obtenerResultados - ejecutada","Obtuvo resultados")
 
             return searchResults;
         } catch (error) {
@@ -180,12 +178,13 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
             // Ejecutar busqueda
             var result = obtenerResultados(objSearch);
 
+            log.audit("busquedaClustersActivos - resultados", {
+                "extencionResultado": result.length,
+                "resultado": result
+            });
+
             // Valida que la busqueda retorne resultados
             if (result.length > 0) {
-                log.audit("busquedaClustersActivos - resultados", {
-                    "extencionResultado": result.length,
-                    "resultado": result
-                });
                 return result;
             } else {
                 throw errorModule.create(controladorErrores.controladorErrores("002","busquedaClustersActivos","No se encontro resultados en customrecord_2win_cluster_talana"))
