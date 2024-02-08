@@ -74,25 +74,18 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             datos.razonSocial.proceso.externalId = datos.razonSocial.proceso.nombreCluster + "_" + datos.razonSocial.id + "_" + datos.acuerdoComercial.id
             datos.razonSocial.proceso.entityid = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.razonSocial.proceso.taxPayerNumber = datos.razonSocial.rut.slice(0, -2);
-            datos.acuerdoComercial.proceso.emails = datos.acuerdoComercial.emails.split(/[;,]/);
-            datos.acuerdoComercial.proceso.email = datos.acuerdoComercial.proceso.emails[0]
             datos.razonSocial.proceso.companyname = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.razonSocial.proceso.digitoVerificador = datos.razonSocial.rut[datos.razonSocial.rut.length - 1]
             datos.razonSocial.proceso.addressee = datos.razonSocial.id + "_" + datos.acuerdoComercial.id + "/" + datos.razonSocial.razonSocial
             datos.acuerdoComercial.proceso.detalleAcuerdoComercial = `<p>Acuerdo comercial № ${datos.acuerdoComercial.id} <br>Razón social pagadora № ${datos.razonSocial.id} ${datos.razonSocial.rut} ${datos.razonSocial.razonSocial}<br></p><p> Plan Contratado: True </p><p>BillingCycle: ${datos.acuerdoComercial.billingCycle}</p><p> Notas: ${datos.acuerdoComercial.notes}</p><p>Plan Contratado: <pre>${datos.acuerdoComercial.hired_plan}</pre> </p>`
             
-            // Verificar extension de entityid
+            // Verificar extension de valores para entityid y notes, si superan la extension se ajustan
             if (datos.razonSocial.proceso.entityid.length > 83) {
-                // Corta la cadena para que tenga como máximo 83 caracteres
                 datos.razonSocial.proceso.entityid = datos.razonSocial.proceso.entityid.substring(0, 83);
                 datos.razonSocial.proceso.companyname = datos.razonSocial.proceso.companyname.substring(0, 83);
             }
-
-            // Verificar extension de las notas
-            if (datos.acuerdoComercial.notes.length > 998) {
-                // Corta la cadena para que tenga como máximo 998 caracteres
+            if (datos.acuerdoComercial.notes !== null && datos.acuerdoComercial.notes.length > 998) {
                 datos.acuerdoComercial.notes = datos.acuerdoComercial.notes.substring(0, 998);
-
             } 
 
             // Crear registro
@@ -138,8 +131,8 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             addressSubrecord.setValue({ fieldId: "country", value: "CL" });
             log.debug("crearCliente - linea","campo - country");
 
-            // Verificar extension del numero telefonico
-            if (datos.razonSocial.telefono.length >= 7) {
+            // Definir campos de telefono solo si cumplen con la extension requerida
+            if (datos.razonSocial.telefono !== null && datos.razonSocial.telefono.length >= 7) {
                 addressSubrecord.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
                 log.debug("crearCliente - linea","campo - phone");
                 registro.setValue({ fieldId: "phone", value: datos.razonSocial.telefono });
@@ -147,19 +140,22 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             }
             lineaRegistro.commitLine({ sublistId: 'addressbook' });
             log.debug("crearCliente - lineaRegistro", "Se guardo linea addressbook");
+            
             registro.setValue({ fieldId: "custentity_tal_ca_pk", value: datos.acuerdoComercial.id }); 
             log.debug ("crearCliente - bodyFields","custentity_tal_ca_pk");
-            registro.setValue({ fieldId: "email", value: datos.acuerdoComercial.proceso.email }); 
-            log.debug ("crearCliente - bodyFields","email");
-            if (datos.acuerdoComercial.notes.length < 999) {
-                registro.setValue({ fieldId: "comments", value: datos.acuerdoComercial.notes }); 
-                log.debug ("crearCliente - bodyFields","comments");
+            if (datos.acuerdoComercial.hasOwnProperty("emails") && datos.acuerdoComercial.emails !== "" && datos.acuerdoComercial.emails !== null) {  
+                datos.acuerdoComercial.proceso.emails = datos.acuerdoComercial.emails.split(/[;,]/);
+                datos.acuerdoComercial.proceso.email = datos.acuerdoComercial.proceso.emails[0]
+                registro.setValue({ fieldId: "email", value: datos.acuerdoComercial.proceso.email }); 
+                log.debug ("crearCliente - bodyFields","email");
             }
+            registro.setValue({ fieldId: "comments", value: datos.acuerdoComercial.notes }); 
+            log.debug ("crearCliente - bodyFields","comments");
             registro.setValue({ fieldId: "custentity_lmry_nomolestar", value: datos.acuerdoComercial.no_molestar });
             log.debug ("crearCliente - bodyFields","custentity_lmry_nomolestar");
             registro.setValue({ fieldId: "custentity_lmry_enimplementacion", value: datos.acuerdoComercial.en_implementacion });
             log.debug ("crearCliente - bodyFields","custentity_lmry_enimplementacion");
-            registro.setValue({ fieldId: "custentity_2winestadoacuerdo", value: datos.acuerdoComercial.status }); // custentity_2winestadoacuerdo, custentity_2winestadoac
+            registro.setValue({ fieldId: "custentity_2winestadoacuerdo", value: datos.acuerdoComercial.status }); 
             log.debug ("crearCliente - bodyFields","custentity_2winestadoacuerdo");
             registro.setValue({ fieldId: "custentity_2winonhold", value: datos.acuerdoComercial.on_hold });
             log.debug ("crearCliente - bodyFields","custentity_2winonhold");
