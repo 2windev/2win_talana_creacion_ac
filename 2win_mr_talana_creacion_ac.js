@@ -272,7 +272,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                     acRs.razonSocial.proceso.tipoRegistroCreado = ""
                     acRs.razonSocial.proceso.idRegistroCreado = "ya existe registro custumer: " + customerExistente[0].internalId
                     acRs.razonSocial.proceso.entityid = customerExistente[0].internalId
-                    acRs.razonSocial.proceso.descripcionResultado = "custumer ya existe"
+                    acRs.razonSocial.proceso.descripcionResultado = "Ya existe customer para acuerdo comercial: " + acRs.acuerdoComercial.id
                     /**@todo - Actualizar registro*/  
                     // acRs = daoCrearRegistros.actualizarCliente(acRs)
                 } else {
