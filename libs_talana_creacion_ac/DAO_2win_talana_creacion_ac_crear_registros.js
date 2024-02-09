@@ -3,7 +3,7 @@
  * @module ./DAO_2win_iva_af_crear_registros.js
  * @NModuleScope Public
  */
-define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], function(record,format,errorModule,controladorErrores){
+define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,errorModule,controladorErrores){
 
     /**
      * @function crearReporteAuditoria - Crea un nuevo registro en base a los datos recibidos
@@ -12,7 +12,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
      */
     function crearReporteAuditoria(datos) {
         try {
-            log.debug("crearReporteAuditoria - datos",{
+            log.audit("crearReporteAuditoria - datos",{
                 "datos": datos,
                 "tipoDato": typeof(datos)
             })  
@@ -48,7 +48,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
 
             return datos; 
         } catch (error) {
-            log.error("crearReporteAuditoria - error", error.message)
+            log.error("crearReporteAuditoria - error", error)
             if (error.name === "ERROR_PERSONALIZADO") {
                 throw error
             } else {
@@ -64,7 +64,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
     */
     function crearCliente(datos) {
         try{
-            log.debug("crearCliente - datos", {
+            log.audit("crearCliente - datos", {
                 "datos": datos,
                 "tipoDato": typeof(datos)
             })
@@ -172,7 +172,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
 
             datos.razonSocial.proceso.tipoRegistroCreado = "customer"
             datos.razonSocial.proceso.idRegistroCreado = String(idCustomer)
-            datos.razonSocial.proceso.descripcionResultado = "Procesado"
+            datos.razonSocial.proceso.descripcionResultado = "Acuerdo comercial: " + datos.acuerdoComercial.id + " creado exitosamente"
             datos.acuerdoComercial.proceso.idCustomer = idCustomer
 
             return datos
@@ -182,7 +182,7 @@ define(["N/record","N/format","N/error","./DAO_controlador_errores.js"], functio
             if (error.name === "ERROR_PERSONALIZADO") {
                 throw error
             } else {
-                throw errorModule.create(controladorErrores.controladorErrores("001","crearCliente",error.message))
+                throw errorModule.create(controladorErrores.controladorErrores("001","crearCliente",error.message + " para acuerdo comercial: " + datos.acuerdoComercial.id))
             }
         }
     }

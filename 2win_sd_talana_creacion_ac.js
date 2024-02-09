@@ -40,11 +40,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
             // Recuperar los cluster y sus datos
             var clusters = dao.busquedaClustersActivos()
 
-            // Declarar variable que monitoreara el status de la tarea
-            var statusTarea;
-
             if (numeroEjecucion < clusters.length) {
-                
                 // Agregar propiedad proceso a cluster
                 clusters[numeroEjecucion].proceso = {
                     "nombreProceso": "talana_creacion_ac",
@@ -84,7 +80,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
                 log.debug("ejecutarTarea - tareaId", tareaId)
     
                 // Monitoreo tarea
-                statusTarea = task.checkStatus({ taskId: tareaId });
+                var statusTarea = task.checkStatus({ taskId: tareaId });
                 log.audit("ejecutarTarea - statusTarea", statusTarea);
             }
 
