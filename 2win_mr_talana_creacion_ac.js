@@ -30,7 +30,6 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
 
             // Cambiar url http por https
             var urlhttps = url.replace("http://", "https://");
-            // log.debug("ejecutarPeticion - url", urlhttps)
 
             // Realizar peticion get
             var respuesta = https.get({
@@ -72,7 +71,6 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             cluster.proceso.datosScript = datosScript
             cluster.proceso.scriptId = datosScript.scriptId
             cluster.proceso.etapa = "getInputData"
-            var proceso = cluster.proceso
 
             // Ejecutar peticion para recuperar acuerdos comerciales
             var respuestaAcuerdosComerciales = ejecutarPeticion(cluster.proceso.urlPeticionAcuerdosComerciales,cluster.token,cluster.proceso.api)
@@ -85,7 +83,6 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 // Por cada elemento de la respuesta
                 respuestaAcuerdosComerciales.results.forEach(function (acuerdoComercial) {
                     acuerdoComercial.proceso = cluster.proceso
-                    // log.debug("getInputData - acuerdoComercial", acuerdoComercial)
 
                     // Anadir cada acuerdo comercial al array que almacena los acuerdos comerciales del cluster
                     acuerdosComerciales.push(acuerdoComercial)
@@ -110,30 +107,19 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                             acuerdosComerciales.push(acuerdoComercial)
                         });
                     } else {
-                        log.error("getInputData - while - else - respuestaAcuerdosComerciales", respuestaAcuerdosComerciales)
+                        log.error("getInputData - while - else - pagina sin elementos", respuestaAcuerdosComerciales)
                     }
                     contador += 1
                 }
 
-                // Agregar los acuerdos comercuales recuperados al cluster
-                // cluster.proceso.acuerdosComerciales = acuerdosComerciales
-
                 log.debug("getInputData - acuerdosComercialesEx", acuerdosComerciales.length)
-                log.debug("getInputData - acuerdosComerciales - " + 1, acuerdosComerciales[1])
 
                 return acuerdosComerciales
             } else {
-                // Crear reporte
-                cluster.proceso.etapa = "ejecutarPeticion"
-                cluster.proceso.estado = "002"
-                cluster.proceso.descripcionResultado = "Cluster sin acuerdos comerciales: " + JSON.stringify(respuestaAcuerdosComerciales)
-                cluster.proceso = daoCrearRegistros.crearReporteAuditoria(cluster.proceso)
+                throw errorModule.create(controladorErrores.controladorErrores("002","ejecutarPeticion","Cluster sin acuerdos comerciales: " + JSON.stringify(respuestaAcuerdosComerciales)))
             }
-
-            return cluster
-
         } catch (error) {
-            log.error("getInputData - error", error.message);
+            log.error("getInputData - error", error);
 
             // Evaluar el nombre del error y crear reporte
             if (error.name === "ERROR_PERSONALIZADO") {
@@ -158,8 +144,6 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
      */
     function map(context) {
         try {   
-            log.debug("map - context", context);
-
             // Parsear value del getInputData
             var acuerdoComercial = JSON.parse(context.value);
             log.audit("map - key: " + context.key, {
@@ -227,27 +211,21 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
 
                 // Evaluar si la razon social recuperada no tiene la propiedad id
                 if (!respuestaRazonSocial.hasOwnProperty("id")) {
-                    respuestaRazonSocial.proceso.etapa = "ejecutarPeticion" 
-                    respuestaRazonSocial.proceso.estado = "002" 
-                    respuestaRazonSocial.proceso.descripcionResultado = "Razon social: " +  JSON.stringify(respuestaRazonSocial) + " sin id"
                     throw errorModule.create(controladorErrores.controladorErrores("002","map","Razon social: " +  JSON.stringify(respuestaRazonSocial) + " sin id")) 
                 }
 
                 cluster.razonSocial = respuestaRazonSocial
                 acRs.razonSocial = respuestaRazonSocial
             } else {
-                respuestaDetalleAcuerdoComercial.proceso.estado = "002" 
-                respuestaDetalleAcuerdoComercial.proceso.descripcionResultado = "Acuerdo comercial: " +  JSON.stringify(respuestaDetalleAcuerdoComercial) + " sin payingCompany"
                 throw errorModule.create(controladorErrores.controladorErrores("002","map","Acuerdo comercial: " +  JSON.stringify(respuestaDetalleAcuerdoComercial) + " sin payingCompany")) 
             } 
             cluster.acuerdoComercial = respuestaDetalleAcuerdoComercial
             acRs.acuerdoComercial = respuestaDetalleAcuerdoComercial
-
             log.debug("map - acRs", acRs)
 
             context.write(acRs.acuerdoComercial.id,acRs);
         } catch (error) {
-            log.error("map - error", error.message);
+            log.error("map - error", error);
             // Evaluar el nombre del error y crear reporte
             if (error.name === "ERROR_PERSONALIZADO") {
                 cluster.proceso.etapa = error.cause.message.etapa
@@ -272,16 +250,14 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
      * @param {Object} context - Datos recuperados de etapa map.
      */
     function reduce(context) {
-        try {   
-            log.debug("reduce - context", context);
-            log.debug("reduce - values", {
+        try {
+            log.debug("reduce - key: " + context.key, {
                 "extension": context.values.length,
                 "values": context.values
             });
 
             // Parsear value de reduce
             var acRs = JSON.parse(context.values[0]);
-            log.audit("reduce - key: " + context.key, acRs);
 
             if (acRs.acuerdoComercial.proceso.estado === "000" && acRs.razonSocial.proceso.estado === "000") {
                 acRs.razonSocial.proceso.externalId = acRs.razonSocial.proceso.nombreCluster + "_" + acRs.razonSocial.id + "_" + acRs.acuerdoComercial.id
@@ -311,7 +287,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
 
             context.write(acRs.razonSocial.proceso.nombreCluster, acRs.razonSocial.proceso);
         } catch (error) {
-            log.error("reduce - error", error.message);
+            log.error("reduce - error", error);
             // Evaluar el nombre del error y crear reporte
             if (error.name === "ERROR_PERSONALIZADO") {
                 acRs.razonSocial.proceso.etapa = error.cause.message.etapa
@@ -342,11 +318,9 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             log.audit("summarize - cluster", cluster)
 
             var datosScript = controladorErrores.obtenerDatosScript()
-            var tokenProceso = cluster.proceso.tokenProceso
             cluster.proceso.datosScript = datosScript
             cluster.proceso.scriptId = datosScript.scriptId
             cluster.proceso.etapa = "summarize"
-            var proceso = cluster.proceso
 
             var registrosCreados = {};
             registrosCreados[cluster.nombre] = []
@@ -402,7 +376,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             }
 
         } catch (error) {
-            log.error("summarize - error", error.message); 
+            log.error("summarize - error", error); 
 
             // Evaluar el nombre del error y crear reporte
             if (error.name === "ERROR_PERSONALIZADO") {
