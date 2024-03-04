@@ -147,7 +147,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             // Parsear value del getInputData
             var acuerdoComercial = JSON.parse(context.value);
             log.audit("map - key: " + context.key, {
-                "acuerdoComercialExtencion": acuerdoComercial.length,
+                "extension": acuerdoComercial.length,
                 "acuerdoComercial": acuerdoComercial
             });
 
@@ -177,6 +177,15 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 "tokenPeticion": cluster.token,
                 "api": api,
                 "urlPeticionDetalleAcuerdoComercial": urlPeticionDetalleAcuerdoComercial,
+                "terms": 2, //'30 Días'
+                "cuenta": '1-20-10-01',
+                "artImpto": 17, //'IVA_CL:S-CL', taxitem
+                "estadocobranza": 2, // Aviso y Corte
+                "lmryCodActecon": '',
+                "lmry_country": 1431, // custentity_lmry_country
+                "lmry_countrycode": 997, // custentity_lmry_countrycode
+                "lmry_subsidiary_country": 45, // custentity_lmry_subsidiary_country
+                "lmryAteconSii": '',
                 "datosScript": proceso.datosScript,
                 "scriptId": proceso.scriptId,
                 "etapa": "map",
@@ -187,6 +196,18 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
 
             // Evaluar si el detalle recuperado tiene la propiedad payingCompany
             if (respuestaDetalleAcuerdoComercial.hasOwnProperty("payingCompany") ) {
+                // Agregar propiedades estaticas al acuerdo comercial
+                var customerAdds = {
+                    terms: 2, //'30 Días'
+                    cuenta: '1-20-10-01',
+                    artImpto: 17, //'IVA_CL:S-CL', taxitem
+                    estadocobranza: 2, // Aviso y Corte
+                    lmryCodActecon: '',
+                    lmry_country: 1431, // custentity_lmry_country
+                    lmry_countrycode: 997, // custentity_lmry_countrycode
+                    lmry_subsidiary_country: 45, // custentity_lmry_subsidiary_country
+                    lmryAteconSii: ''
+                }
                 cluster.payingCompany = respuestaDetalleAcuerdoComercial.payingCompany
 
                 // Definir api, url y ejecutar peticion para recuperar razon sociall 
@@ -278,6 +299,22 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 } else {
                     // Crear registro customer
                     acRs = daoCrearRegistros.crearCliente(acRs)
+
+                    // Crear contacto
+                    acRs = daoCrearRegistros.getContacto(acRs);
+
+                    // Crear registro personalizado de AutomaticSet
+                    acRs.razonSocial.proceso.lmry_automaticSet = {
+                        "lmry_us_entity": acRs.razonSocial.proceso.idRegistroCreado,
+                        "lmry_us_entity_type": 4, //'Customer',
+                        "lmry_us_country": 45, //'CL',
+                        "lmry_us_subsidiary": acRs.razonSocial.proceso.idSubsidiaria,
+                        "lmry_us_transaction": 7, //'Invoice',
+                        "lmry_document_type": 389, //'Factura Electronica',
+                        "lmry_paymentmethod": 359, //'CL - Pago a Cta. Cte.',
+                        "lmry_doc_ref_type": 389
+                    };
+                    acRs = daoCrearRegistros.creaAutomaticSet(acRs);  
                 }
 
                 // Crear reporte
