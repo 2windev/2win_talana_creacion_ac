@@ -57,6 +57,27 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
         }
     }
 
+    /**
+     * 
+     * @param {String} rut  - String a formatear
+     * @returns {String} - String formateado
+     */
+    function formatRut(rut) {
+        try {
+            log.debug("formatRut - rut", rut)
+
+            var rutsinpuntos = rut.replace('.', '');
+            return rutsinpuntos.toString().split(/(?=(?:\d{3})+(?:\.|$))/g).join(".");
+        } catch (error) {
+            log.error("formatRut - error", error)
+            if (error.name === "ERROR_PERSONALIZADO") {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001", "formatRut", error.message))
+            }
+        }
+    }
+
     /**.
     * @function crearCliente - Crear un nuevo cliente en la tabla customer.
     * @param {Object} datos - Datos para los campos del cliente a crear.
@@ -165,6 +186,34 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             log.debug ("crearCliente - bodyFields","custentity_lmry_requiereoc");
             registro.setValue({ fieldId: "custentity_tal_commercialaggrdetails", value: datos.acuerdoComercial.proceso.detalleAcuerdoComercial });
             log.debug ("crearCliente - bodyFields","custentity_tal_commercialaggrdetails");
+            registro.setValue({ fieldId: "custentity_tal_billingcycle", value: datos.acuerdoComercial.billingCycle });
+            log.debug("crearCliente - bodyFields", "custentity_tal_billingcycle");
+            registro.setValue({ fieldId: "custentity_lmry_sv_taxpayer_number", value: formatRut(datos.razonSocial.proceso.taxPayerNumber) });
+            log.debug("crearCliente - bodyFields", "custentity_lmry_sv_taxpayer_number");
+
+            // Definir campos con valores estaticos
+            registro.setValue({ fieldId: "terms", value: datos.acuerdoComercial.proceso.terms });
+            log.debug("crearCliente - terms", datos.acuerdoComercial.proceso.terms);
+            registro.setValue({ fieldId: "accountnumber", value: datos.acuerdoComercial.proceso.cuenta });
+            log.debug("crearCliente - accountnumber", datos.acuerdoComercial.proceso.cuenta);
+            registro.setValue({ fieldId: "taxitem", value: datos.acuerdoComercial.proceso.artImpto });
+            log.debug("crearCliente - taxitem", datos.acuerdoComercial.proceso.artImpto);
+            registro.setValue({ fieldId: "custentity_2winestadocobranza", value: datos.acuerdoComercial.proceso.estadocobranza });
+            log.debug("crearCliente - custentity_2winestadocobranza", datos.acuerdoComercial.proceso.estadocobranza);
+            registro.setValue({ fieldId: "custentity_lmry_country", value: datos.acuerdoComercial.proceso.lmry_country });
+            log.debug("crearCliente - bodyField", {"custentity_lmry_country": datos.acuerdoComercial.proceso.lmry_country});
+            registro.setValue({ fieldId: "custentity_lmry_countrycode", value: datos.acuerdoComercial.proceso.lmry_countrycode });
+            log.debug("crearCliente - bodyField", {"custentity_lmry_countrycode": datos.acuerdoComercial.proceso.lmry_countrycode});
+            registro.setValue({ fieldId: "custentity_lmry_subsidiary_country", value: datos.acuerdoComercial.proceso.lmry_subsidiary_country });
+            log.debug("crearCliente - custentity_lmry_subsidiary_country", datos.acuerdoComercial.proceso.lmry_subsidiary_country);
+
+            // Guardar registro
+            var idCustomer = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
+            log.audit("crearCliente - idCustomer", idCustomer);
+
+            datos.razonSocial.proceso.tipoRegistroCreado = "customer"
+            datos.razonSocial.proceso.idRegistroCreado = String(idCustomer)
+            datos.acuerdoComercial.proceso.idCustomer = idCustomer
 
             // Guardar registro
             var idCustomer = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
@@ -187,8 +236,172 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
         }
     }
     
+    /**
+     * @function getContacto - Valida tipos de contacto en acuerdo comercial y crea contactos correspondientes
+     * @param {object} datos - Datos de acurdo comercial y razon social
+     * @returns 
+     */
+    function getContacto(datos) {
+        try {
+            datos.razonSocial.proceso.etapa = "getContacto"
+            log.debug("getContacto - datos", datos);
+
+            var emailList = [];
+            datos.razonSocial.proceso.contactosCreados = [];
+
+            // Si el acuerdo comercial tiene email
+            if (datos.acuerdoComercial.hasOwnProperty("emails") && datos.acuerdoComercial.emails !== "" && datos.acuerdoComercial.emails !== null) {
+                // Aislar cada email en el array emailList
+                emailList = datos.acuerdoComercial.emails.split(/[;,]/);
+
+                // Por cada email
+                for (var i = 0; i < emailList.length; i++) {
+                    datosContacto = {
+                        "customerId": datos.acuerdoComercial.proceso.idCustomer,
+                        "typeContact": 'email',
+                        "firstName": 'Contacto', //datos.razonSocial.razonSocial,
+                        "lastName": '',
+                        "telephone": datos.razonSocial.telefono,
+                        "email": emailList[i],
+                        "subsidiary": datos.razonSocial.proceso.idSubsidiaria
+                    }
+
+                    // Crear contacto
+                    datosContacto = crearContacto(datosContacto)
+                    datos.razonSocial.proceso.contactosCreados.push(datosContacto)
+                };
+            }
+
+            emailList = [];
+
+            // Si el acuerdo comercial tiene administrative_contact
+            if (datos.acuerdoComercial.hasOwnProperty("administrative_contact") && datos.acuerdoComercial.administrative_contact !== "" && datos.acuerdoComercial.administrative_contact !== null) {
+                // Aislar cada administrative_contact en el array emailList
+                emailList = datos.acuerdoComercial.administrative_contact.split(/[;,]/);
+
+                // Por cada administrative_contact
+                for (var i = 0; i < emailList.length; i++) {
+                    datosContacto = {
+                        "customerId": datos.acuerdoComercial.proceso.idCustomer,
+                        "typeContact": 'Adm Contacto',
+                        "firstName": 'Contato Administrativo', //datos.razonSocial.razonSocial,
+                        "lastName": '',
+                        "telephone": datos.razonSocial.telefono,
+                        "email": emailList[i],
+                        "subsidiary": datos.razonSocial.proceso.idSubsidiaria
+                    }
+
+                    // Crear contacto
+                    datosContacto = crearContacto(datosContacto)
+                    datos.razonSocial.proceso.contactosCreados.push(datosContacto)
+                };
+            }
+
+            return datos
+        } catch (error) {
+            log.error("getContacto - error", error);
+            if (error.name === "ERROR_PERSONALIZADO") {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001", "getContacto", error.message + " para customer: " + customerId))
+            }
+        }
+    }
+
+    /**
+     * @function crearContacto - Crear registro en netsuite
+     * @param {object} datosContacto - Datos necesarios para crear el registro
+     * @returns {object} - Datos con datos de registro creado
+     */
+    function crearContacto(datosContacto) {
+        try {
+            log.debug("crearContacto - datosContacto", datosContacto)
+
+            var registro = null;
+            var registro = record.create({ type: "contact", isDynamic: true });
+
+            registro.setValue({ fieldId: "company", value: datosContacto.customerId })
+            log.debug("crearContacto - company", datosContacto.customerId);
+            registro.setValue({ fieldId: "name", value: datosContacto.typeContact })
+            log.debug("crearContacto - name", datosContacto.typeContact);
+            registro.setValue({ fieldId: "firstname", value: datosContacto.firstName })
+            log.debug("crearContacto - firstname", datosContacto.firstName);
+            registro.setValue({ fieldId: "lastname", value: datosContacto.lastName })
+            log.debug("crearContacto - lastname", datosContacto.lastname);
+            registro.setValue({ fieldId: "homephone", value: datosContacto.telephone })
+            log.debug("crearContacto - homephone", datosContacto.telephone);
+            registro.setValue({ fieldId: "email", value: datosContacto.email })
+            log.debug("crearContacto - email", datosContacto.email);
+            registro.setValue({ fieldId: "subsidiary", value: datosContacto.subsidiary })
+            log.debug("crearContacto - subsidiary", datosContacto.subsidiary);
+
+            var idContacto = registro.save({ ignoreMandatoryFields: true });
+            datosContacto.idContacto = idContacto;
+            log.audit("crearContacto - idContacto", idContacto)
+
+            return datosContacto
+        } catch (error) {
+            log.error("crearContacto - error", error);
+            if (error.name === "ERROR_PERSONALIZADO") {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001", "crearContacto", error.message + " para customer: " + datosContacto.customerId))
+            }
+        }
+    };
+
+    /**
+     * @function creaAutomaticSet - Crear un registro personalizado en netsuite
+     * @param {object} datos - Datos necesarios para la creacion del registro
+     * @returns {object} - Datos luego de la creacion del registro
+     */
+    function creaAutomaticSet(datos) {
+        try {
+            log.debug("creaAutomaticSet - lmry_automaticSet", datos.razonSocial.proceso.lmry_automaticSet)
+            datos.razonSocial.proceso.etapa = "creaAutomaticSet"
+
+            // Crear registro
+            var registro = record.create({ type: 'customrecord_lmry_universal_setting_v2', isDynamic: true });
+
+            // Definir campos registro
+            registro.setValue({ fieldId: "custrecord_lmry_us_entity", value: datos.razonSocial.proceso.lmry_automaticSet.lmry_us_entity });
+            log.debug("creaAutomaticSet - bodyFields", "custrecord_lmry_us_entity");
+            registro.setValue({ fieldId: "custrecord_lmry_us_entity_type", value: datos.razonSocial.proceso.lmry_automaticSet.lmry_us_entity_type });
+            log.debug("creaAutomaticSet - bodyFields", "custrecord_lmry_us_entity_type");
+            registro.setValue({ fieldId: "custrecord_lmry_us_subsidiary", value: datos.razonSocial.proceso.lmry_automaticSet.lmry_us_subsidiary });
+            log.debug("creaAutomaticSet - bodyFields", "custrecord_lmry_us_entity_type");
+            registro.setValue({ fieldId: "custrecord_lmry_us_country", value: datos.razonSocial.proceso.lmry_automaticSet.lmry_us_country });
+            log.debug("creaAutomaticSet - bodyFields", "custrecord_lmry_us_country");
+            registro.setValue({ fieldId: "custrecord_lmry_us_transaction", value: datos.razonSocial.proceso.lmry_automaticSet.lmry_us_transaction });
+            log.debug("creaAutomaticSet - bodyFields", "custrecord_lmry_us_transaction");
+            registro.setValue({ fieldId: "custrecord_lmry_document_type", value: datos.razonSocial.proceso.lmry_automaticSet.lmry_document_type });
+            log.debug("creaAutomaticSet - bodyFields", "custrecord_lmry_document_type");
+            registro.setValue({ fieldId: "custrecord_lmry_paymentmethod", value: datos.razonSocial.proceso.lmry_automaticSet.lmry_paymentmethod });
+            log.debug("creaAutomaticSet - bodyFields", "custrecord_lmry_paymentmethod");
+            registro.setValue({ fieldId: "custrecord_lmry_doc_ref_type", value: datos.razonSocial.proceso.lmry_automaticSet.lmry_doc_ref_type });
+            log.debug("creaAutomaticSet - bodyFields", "custrecord_lmry_doc_ref_type");
+
+            // Guardar registro
+            var idAutomaticSet = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
+            log.audit("creaAutomaticSet - idAutomaticSet", idAutomaticSet)
+            datos.razonSocial.proceso.idAutomaticSet = idAutomaticSet
+            datos.razonSocial.proceso.descripcionResultado = "Acuerdo comercial: " + datos.acuerdoComercial.id + " procesado"
+
+            return datos
+        } catch (error) {
+            log.error("creaAutomaticSet - error", error);
+            if (error.name === "ERROR_PERSONALIZADO") {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001", "creaAutomaticSet", error.message + " para acuerdo comercial: " + datos.acuerdoComercial.id))
+            }
+        }
+    };
+
     return {
         crearReporteAuditoria: crearReporteAuditoria,
-        crearCliente: crearCliente
+        crearCliente: crearCliente,
+        getContacto: getContacto,
+        creaAutomaticSet: creaAutomaticSet
     }
 });
