@@ -88,8 +88,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                     acuerdosComerciales.push(acuerdoComercial)
                 });
 
-                /**@todo - Reemplazar: contador < 2 por respuestaAcuerdosComerciales.next !== null */
-                var contador = 0
+                var contador = 2
                 // Mientras existan mas paginas
                 while (respuestaAcuerdosComerciales.next !== null) { 
                     // Definir url y ejecutar peticion para recuperar siguiente pagina de acuerdos comerciales

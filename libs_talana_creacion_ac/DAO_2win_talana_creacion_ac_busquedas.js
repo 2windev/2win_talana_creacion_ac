@@ -67,20 +67,20 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
                 filters: [
                     ["externalid","is",externalId]
                 ],
-                columns:[
+                columns: [
                     search.createColumn({name: "internalid", label: "internalId"}),
                     search.createColumn({name: "entityid", label: "entityid"}),
                     search.createColumn({name: "custentity_lmry_sv_taxpayer_number", label: "taxPayerNumber"}),
                     search.createColumn({name: "companyname", label: "companyname"}),
                     search.createColumn({name: "custentity_lmry_digito_verificator", label: "digitoVerificador"}),
-                    // search.createColumn({name: "defaultaddress", label: "defaultAddress"}),
                     search.createColumn({name: "custentity_tal_commercialaggrdetails", label: "detalleAcuerdoComercial"})
                 ]
             };
-            var result = obtenerResultados(objSearch);
 
+            // Ejecutar busqueda
+            var result = obtenerResultados(objSearch);
             log.debug("busquedaCustomer - result", {
-                "extencionResultado": result.length,
+                "extension": result.length,
                 "result": result
             })
 
@@ -136,9 +136,8 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
     
             // Ejecutar busqueda
             var result = obtenerResultados(objSearch);
-
             log.audit("validarToken - resultados", {
-                "extencionResultado": result.length,
+                "extension": result.length,
                 "resultado": result
             });
             return result;
@@ -161,10 +160,10 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
             // Tipo, filtros y columnas para la busqueda
             var objSearch = {
                 type: "customrecord_2win_cluster_talana",
-                filters:[
+                filters: [
                    ["custrecord_2win_cluster_talana_activo","is",true]
                 ],
-                columns:[
+                columns: [
                    search.createColumn({name: "internalid", label: "internalId"}),
                    search.createColumn({name: "custrecord_2win_cluster_talana_nombre", label: "nombre" }),
                    search.createColumn({name: "custrecord_2win_cluster_talana_subsidiar", label: "idSubsidiaria"}), 
@@ -177,9 +176,8 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
     
             // Ejecutar busqueda
             var result = obtenerResultados(objSearch);
-
             log.audit("busquedaClustersActivos - resultados", {
-                "extencionResultado": result.length,
+                "extension": result.length,
                 "resultado": result
             });
 
