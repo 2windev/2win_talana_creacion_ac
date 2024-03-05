@@ -84,7 +84,7 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
     * @return {String} - Internalid del cliente creado.
     */
     function crearCliente(datos) {
-        try{
+        try {
             log.audit("crearCliente - datos", {
                 "datos": datos,
                 "tipoDato": typeof(datos)
@@ -200,12 +200,12 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             log.debug("crearCliente - taxitem", datos.acuerdoComercial.proceso.artImpto);
             registro.setValue({ fieldId: "custentity_2winestadocobranza", value: datos.acuerdoComercial.proceso.estadocobranza });
             log.debug("crearCliente - custentity_2winestadocobranza", datos.acuerdoComercial.proceso.estadocobranza);
+            registro.setValue({ fieldId: "custentity_lmry_subsidiary_country", value: datos.acuerdoComercial.proceso.lmry_subsidiary_country });
+            log.debug("crearCliente - custentity_lmry_subsidiary_country", datos.acuerdoComercial.proceso.lmry_subsidiary_country);
             registro.setValue({ fieldId: "custentity_lmry_country", value: datos.acuerdoComercial.proceso.lmry_country });
             log.debug("crearCliente - bodyField", {"custentity_lmry_country": datos.acuerdoComercial.proceso.lmry_country});
             registro.setValue({ fieldId: "custentity_lmry_countrycode", value: datos.acuerdoComercial.proceso.lmry_countrycode });
             log.debug("crearCliente - bodyField", {"custentity_lmry_countrycode": datos.acuerdoComercial.proceso.lmry_countrycode});
-            registro.setValue({ fieldId: "custentity_lmry_subsidiary_country", value: datos.acuerdoComercial.proceso.lmry_subsidiary_country });
-            log.debug("crearCliente - custentity_lmry_subsidiary_country", datos.acuerdoComercial.proceso.lmry_subsidiary_country);
 
             // Guardar registro
             var idCustomer = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
@@ -215,17 +215,8 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             datos.razonSocial.proceso.idRegistroCreado = String(idCustomer)
             datos.acuerdoComercial.proceso.idCustomer = idCustomer
 
-            // Guardar registro
-            var idCustomer = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
-            log.audit("crearCliente - idCustomer", idCustomer)
-
-            datos.razonSocial.proceso.tipoRegistroCreado = "customer"
-            datos.razonSocial.proceso.idRegistroCreado = String(idCustomer)
-            datos.razonSocial.proceso.descripcionResultado = "Acuerdo comercial: " + datos.acuerdoComercial.id + " creado exitosamente"
-            datos.acuerdoComercial.proceso.idCustomer = idCustomer
-
             return datos
-        }catch(error){
+        } catch (error){
             log.error("crearCliente - error", error);
 
             if (error.name === "ERROR_PERSONALIZADO") {
