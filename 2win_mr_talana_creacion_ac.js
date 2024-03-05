@@ -177,14 +177,14 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 "tokenPeticion": cluster.token,
                 "api": api,
                 "urlPeticionDetalleAcuerdoComercial": urlPeticionDetalleAcuerdoComercial,
-                "terms": 2, //'30 Días'
+                "terms": 2, // 30 Días
                 "cuenta": '1-20-10-01',
-                "artImpto": 17, //'IVA_CL:S-CL', taxitem
+                "artImpto": 17, // IVA_CL:S-CL, taxitem
                 "estadocobranza": 2, // Aviso y Corte
                 "lmryCodActecon": '',
-                "lmry_country": 1431, // custentity_lmry_country
+                "lmry_subsidiary_country": 45, // custentity_lmry_subsidiary_country - chile
+                "lmry_country": 1431, // custentity_lmry_country - CHILE
                 "lmry_countrycode": 997, // custentity_lmry_countrycode
-                "lmry_subsidiary_country": 45, // custentity_lmry_subsidiary_country
                 "lmryAteconSii": '',
                 "datosScript": proceso.datosScript,
                 "scriptId": proceso.scriptId,
@@ -197,17 +197,6 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             // Evaluar si el detalle recuperado tiene la propiedad payingCompany
             if (respuestaDetalleAcuerdoComercial.hasOwnProperty("payingCompany") ) {
                 // Agregar propiedades estaticas al acuerdo comercial
-                var customerAdds = {
-                    terms: 2, //'30 Días'
-                    cuenta: '1-20-10-01',
-                    artImpto: 17, //'IVA_CL:S-CL', taxitem
-                    estadocobranza: 2, // Aviso y Corte
-                    lmryCodActecon: '',
-                    lmry_country: 1431, // custentity_lmry_country
-                    lmry_countrycode: 997, // custentity_lmry_countrycode
-                    lmry_subsidiary_country: 45, // custentity_lmry_subsidiary_country
-                    lmryAteconSii: ''
-                }
                 cluster.payingCompany = respuestaDetalleAcuerdoComercial.payingCompany
 
                 // Definir api, url y ejecutar peticion para recuperar razon sociall 
@@ -294,8 +283,6 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                     acRs.razonSocial.proceso.idRegistroCreado = "ya existe registro custumer: " + customerExistente[0].internalId
                     acRs.razonSocial.proceso.entityid = customerExistente[0].internalId
                     acRs.razonSocial.proceso.descripcionResultado = "Ya existe customer para acuerdo comercial: " + acRs.acuerdoComercial.id
-                    /**@todo - Actualizar registro*/  
-                    // acRs = daoCrearRegistros.actualizarCliente(acRs)
                 } else {
                     // Crear registro customer
                     acRs = daoCrearRegistros.crearCliente(acRs)
