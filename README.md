@@ -18,9 +18,9 @@ Descripcion de proyecto
 
 - Tablas Personalizadas
 ​
-    1. [Automatic set](https://7583958-sb1.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=360)
-    2. [cluster talana](https://7583958-sb1.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=981)
-    3. [2win auditoria](https://7583958-sb1.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=980)
+    1. [cluster talana](https://7583958-sb1.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=981)
+    2. [2win auditoria](https://7583958-sb1.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=980)
+    3. [Automatic set](https://7583958-sb1.app.netsuite.com/app/common/custom/custrecordentrylist.nl?rectype=360)
 
 - Tabla
 
@@ -30,27 +30,56 @@ Descripcion de proyecto
 - Campos personalizados
 
     - Estos campos son utilizados en los registros de **customer**
-        - custentity_tal_rz_pk
-        - custentity_lmry_sv_taxpayer_number
-        - custentity_lmry_digito_verificator
-        - custentity_lmry_countrycode
-        - custentity_lmry_nombre_empresa
-        - custentity_lmry_giro_libre
-        - custentity_tal_ca_pk
-        - custentity_lmry_nomolestar
-        - custentity_lmry_enimplementacion
-        - custentity_2winestadoac
-        - custentity_2winonhold
-        - custentity_2winmotivoonhold
-        - custentity_lmry_requiereoc
-        - custentity_tal_commercialaggrdetails
-        - custentity_tal_billingcycle
-        - custentity_2winestadocobranza
-        - custentity_lmry_subsidiary_country
-        - custentity_lmry_country
-        - custentity_tal_billingcycle
-        - custentity_tal_billingcycle
-        - custentity_tal_billingcycle
+        - Nombre: RAZONSOCIAL PK 
+        - Id: custentity_tal_rz_pk
+
+        - Nombre: LATAM - NRO DE REGISTRO DE CONTRIBUYENTE
+        - Id: custentity_lmry_sv_taxpayer_number
+
+        - Nombre: LATAM - DIGITO VERIFICADOR
+        - Id: custentity_lmry_digito_verificator
+
+        - Nombre: LATAM - NOMBRE DE EMPRESA
+        - Id: custentity_lmry_nombre_empresa
+
+        - Nombre: LATAM - GIRO
+        - Id: custentity_lmry_giro_libre
+
+        - Nombre: ACUERDO COMERCIAL PK
+        - Id: custentity_tal_ca_pk
+
+        - Nombre: NO MOLESTAR
+        - Id: custentity_lmry_nomolestar
+
+        - Nombre: EN IMPLEMENTACIÓN
+        - Id: custentity_lmry_enimplementacion
+
+        - Nombre: ESTADO AC
+        - Id: custentity_2winestadoacuerdo
+
+        - Nombre: ON HOLD
+        - Id: custentity_2winonhold
+
+        - Nombre: MOTIVO ON HOLD
+        - Id: custentity_2winmotivoonhold
+
+        - Nombre: REQUIERE OC
+        - Id: custentity_lmry_requiereoc
+
+        - Nombre: DETALLE ACUERDO COMERCIAL
+        - Id: custentity_tal_commercialaggrdetails
+
+        - Nombre: BILLING CYCLE
+        - Id: custentity_tal_billingcycle
+
+        - Nombre: ESTADO DE COBRANZA
+        - Id: custentity_2winestadocobranza
+
+        - Nombre: LATAM ENTIDAD - PAIS DE LA SUBSIDIARIA
+        - Id: custentity_lmry_subsidiary_country
+
+        - Nombre: LATAM - PAÍS DE LA ENTIDAD
+        - Id: custentity_lmry_country
 
 
 - Librerías
@@ -64,4 +93,3 @@ Descripcion de proyecto
     - [DAO_controlador_errores.js](./libs_talana_creacion_ac/DAO_controlador_errores.js)
         - Descripcion
             - Contiene funciones para determinar la estructura de un error y recuperar datos del script en ejecucion.
-
