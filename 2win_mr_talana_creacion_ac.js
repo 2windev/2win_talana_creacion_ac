@@ -176,15 +176,6 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 "tokenPeticion": cluster.token,
                 "api": api,
                 "urlPeticionDetalleAcuerdoComercial": urlPeticionDetalleAcuerdoComercial,
-                "terms": 2, // 30 Días
-                "cuenta": '1-20-10-01',
-                "artImpto": 17, // IVA_CL:S-CL, taxitem
-                "estadocobranza": 2, // Aviso y Corte
-                "lmryCodActecon": '',
-                "lmry_subsidiary_country": 45, // custentity_lmry_subsidiary_country - chile
-                "lmry_country": 1431, // custentity_lmry_country - CHILE
-                "lmry_countrycode": 997, // custentity_lmry_countrycode
-                "lmryAteconSii": '',
                 "datosScript": proceso.datosScript,
                 "scriptId": proceso.scriptId,
                 "etapa": "map",
@@ -358,7 +349,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                 return true;
             });
             log.debug("summarize - registrosCreados", registrosCreados)
-            log.debug("summarize - registrosCreados - " + cluster.nombre, registrosCreados[cluster.nombre].length)
+            log.audit("summarize - registrosCreados - " + cluster.nombre, registrosCreados[cluster.nombre].length)
 
             // Recuperar errores
             summary.mapSummary.errors.iterator().each(function(key, value) {
