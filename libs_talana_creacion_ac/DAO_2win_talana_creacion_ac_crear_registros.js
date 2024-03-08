@@ -119,16 +119,12 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             log.debug ("crearCliente - bodyFields","subsidiary");
             registro.setValue({ fieldId: "custentity_tal_rz_pk", value: datos.razonSocial.id });
             log.debug ("crearCliente - bodyFields","custentity_tal_rz_pk");
-            registro.setValue({ fieldId: "custentity_lmry_sv_taxpayer_number", value: datos.razonSocial.proceso.taxPayerNumber });
-            log.debug ("crearCliente - bodyFields","custentity_lmry_sv_taxpayer_number");
             registro.setValue({ fieldId: "companyname", value: datos.razonSocial.proceso.companyname });
             log.debug ("crearCliente - bodyFields","companyname");
             registro.setValue({ fieldId: "externalid", value: datos.razonSocial.proceso.externalId });
             log.debug ("crearCliente - bodyFields","externalid");
             registro.setValue({ fieldId: "custentity_lmry_digito_verificator", value: datos.razonSocial.proceso.digitoVerificador }); 
             log.debug ("crearCliente - bodyFields","custentity_lmry_digito_verificator");
-            registro.setValue({ fieldId: "custentity_lmry_countrycode", value: datos.razonSocial.rut });
-            log.debug ("crearCliente - bodyFields","custentity_lmry_countrycode");
             registro.setValue({ fieldId: "custentity_lmry_nombre_empresa", value: datos.razonSocial.razonSocial });
             log.debug ("crearCliente - bodyFields","custentity_lmry_nombre_empresa");
             registro.setValue({ fieldId: "custentity_lmry_giro_libre", value: datos.razonSocial.giro });
@@ -192,20 +188,18 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             log.debug("crearCliente - bodyFields", "custentity_lmry_sv_taxpayer_number");
 
             // Definir campos con valores estaticos
-            registro.setValue({ fieldId: "terms", value: datos.acuerdoComercial.proceso.terms });
-            log.debug("crearCliente - terms", datos.acuerdoComercial.proceso.terms);
-            registro.setValue({ fieldId: "accountnumber", value: datos.acuerdoComercial.proceso.cuenta });
-            log.debug("crearCliente - accountnumber", datos.acuerdoComercial.proceso.cuenta);
-            registro.setValue({ fieldId: "taxitem", value: datos.acuerdoComercial.proceso.artImpto });
-            log.debug("crearCliente - taxitem", datos.acuerdoComercial.proceso.artImpto);
-            registro.setValue({ fieldId: "custentity_2winestadocobranza", value: datos.acuerdoComercial.proceso.estadocobranza });
-            log.debug("crearCliente - custentity_2winestadocobranza", datos.acuerdoComercial.proceso.estadocobranza);
-            registro.setValue({ fieldId: "custentity_lmry_subsidiary_country", value: datos.acuerdoComercial.proceso.lmry_subsidiary_country });
-            log.debug("crearCliente - custentity_lmry_subsidiary_country", datos.acuerdoComercial.proceso.lmry_subsidiary_country);
-            registro.setValue({ fieldId: "custentity_lmry_country", value: datos.acuerdoComercial.proceso.lmry_country });
-            log.debug("crearCliente - bodyField", {"custentity_lmry_country": datos.acuerdoComercial.proceso.lmry_country});
-            registro.setValue({ fieldId: "custentity_lmry_countrycode", value: datos.acuerdoComercial.proceso.lmry_countrycode });
-            log.debug("crearCliente - bodyField", {"custentity_lmry_countrycode": datos.acuerdoComercial.proceso.lmry_countrycode});
+            registro.setValue({ fieldId: "terms", value: 2 }); 
+            log.debug("crearCliente - terms", 2);
+            registro.setValue({ fieldId: "accountnumber", value: "1-20-10-01" }); 
+            log.debug("crearCliente - accountnumber", "1-20-10-01");
+            registro.setValue({ fieldId: "taxitem", value: 17 }); 
+            log.debug("crearCliente - taxitem", 17);
+            registro.setValue({ fieldId: "custentity_2winestadocobranza", value: 2 }); 
+            log.debug("crearCliente - custentity_2winestadocobranza", 2);
+            registro.setValue({ fieldId: "custentity_lmry_subsidiary_country", value: 45 }); 
+            log.debug("crearCliente - custentity_lmry_subsidiary_country", 45);
+            registro.setValue({ fieldId: "custentity_lmry_country", value: 1431 }); 
+            log.debug("crearCliente - bodyField", 1431);
 
             // Guardar registro
             var idCustomer = registro.save({ enableSourcing: true, ignoreMandatoryFields: true });
