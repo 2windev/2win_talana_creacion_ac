@@ -31,15 +31,23 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
 
             var tokenProceso = dao.obtenerToken();
             var datosScript = controladorErrores.obtenerDatosScript()
-
+            
             proceso.datosScript = datosScript
             proceso.scriptId = datosScript.scriptId
             proceso.etapa = "ejecutarTarea"
             proceso.tokenProceso = String(tokenProceso)
 
+            
+            // Recuperar parametros de operacion
+            var diasAtras = dao.busquedaParametrosOperacion(["talana_creacion_ac_dias_atras"])
+            
             // Recuperar los cluster y sus datos
-            var clusters = dao.busquedaClustersActivos()
+            var clusters = dao.busquedaClustersActivos(diasAtras[0].parametroNumerico)
             var stringFechaActual = clusters[0].stringFechaActual
+            var stringDiasAtras = clusters[0].stringDiasAtras
+            var hoy = new Date();
+            var fecha = hoy.setDate(hoy.getDate() -diasAtras[0].parametroNumerico);
+            log.debug("ejecutarTarea - fechaDiasAtras", new Date(fecha).toLocaleDateString('es-ES'));
 
             if (numeroEjecucion < clusters.length) {
                 // Agregar propiedad proceso a cluster
@@ -48,7 +56,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
                     "nombreCluster": clusters[numeroEjecucion].nombre,
                     "idSubsidiaria": clusters[numeroEjecucion].idSubsidiaria,
                     "api": "acuerdosComerciales",
-                    "urlPeticionAcuerdosComerciales": clusters[numeroEjecucion].urlBase + "m_commercialAgreement/?ordering=-last_update&last_update_gte=" + stringFechaActual,
+                    "urlPeticionAcuerdosComerciales": clusters[numeroEjecucion].urlBase + "m_commercialAgreement/?ordering=-last_update&last_update_gte=" + stringDiasAtras,
                     "acuerdosComerciales": [],
                     "acuerdosComercialesConDetalle": [],
                     "payingCompanys": [],
