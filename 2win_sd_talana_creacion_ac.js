@@ -39,6 +39,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
 
             // Recuperar los cluster y sus datos
             var clusters = dao.busquedaClustersActivos()
+            var stringFechaActual = clusters[0].stringFechaActual
 
             if (numeroEjecucion < clusters.length) {
                 // Agregar propiedad proceso a cluster
@@ -47,7 +48,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
                     "nombreCluster": clusters[numeroEjecucion].nombre,
                     "idSubsidiaria": clusters[numeroEjecucion].idSubsidiaria,
                     "api": "acuerdosComerciales",
-                    "urlPeticionAcuerdosComerciales": clusters[numeroEjecucion].urlBase + "m_commercialAgreement/",
+                    "urlPeticionAcuerdosComerciales": clusters[numeroEjecucion].urlBase + "m_commercialAgreement/?ordering=-last_update&last_update_gte=" + stringFechaActual,
                     "acuerdosComerciales": [],
                     "acuerdosComercialesConDetalle": [],
                     "payingCompanys": [],
@@ -82,8 +83,7 @@ define(["N/task","N/error","N/runtime","./libs_talana_creacion_ac/DAO_controlado
                 // Monitoreo tarea
                 var statusTarea = task.checkStatus({ taskId: tareaId });
                 log.audit("ejecutarTarea - statusTarea", statusTarea);
-            }
-
+            } 
         } catch (error) {
             log.error("ejecutarTarea - error", error);
 
