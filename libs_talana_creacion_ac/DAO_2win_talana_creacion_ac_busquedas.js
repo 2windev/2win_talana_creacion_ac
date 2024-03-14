@@ -164,13 +164,14 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
                    ["custrecord_2win_cluster_talana_activo","is",true]
                 ],
                 columns: [
-                   search.createColumn({name: "internalid", label: "internalId"}),
-                   search.createColumn({name: "custrecord_2win_cluster_talana_nombre", label: "nombre" }),
-                   search.createColumn({name: "custrecord_2win_cluster_talana_subsidiar", label: "idSubsidiaria"}), 
-                   search.createColumn({name: "custrecord_2win_cluster_talana_url_base", label: "urlBase"}),
-                   search.createColumn({name: "custrecord_2win_cluster_talana_token", label: "token"}),
-                   search.createColumn({name: "custrecord_2win_cluster_talana_activo", label: "activo"}),
-                   search.createColumn({name: "custrecord_2win_cluster_talana_fecha_act", label: "ultimaFechaActualizacion"}) 
+                    search.createColumn({name: "internalid", label: "internalId"}),
+                    search.createColumn({name: "custrecord_2win_cluster_talana_nombre", label: "nombre" }),
+                    search.createColumn({name: "custrecord_2win_cluster_talana_subsidiar", label: "idSubsidiaria"}), 
+                    search.createColumn({name: "custrecord_2win_cluster_talana_url_base", label: "urlBase"}),
+                    search.createColumn({name: "custrecord_2win_cluster_talana_token", label: "token"}),
+                    search.createColumn({name: "custrecord_2win_cluster_talana_activo", label: "activo"}),
+                    search.createColumn({name: "custrecord_2win_cluster_talana_fecha_act", label: "ultimaFechaActualizacion"}),
+                    search.createColumn({name: "formulatext", formula: "TO_CHAR({today},'YYYY-MM-DD')", label: "stringFechaActual"})
                 ]
             }
     
