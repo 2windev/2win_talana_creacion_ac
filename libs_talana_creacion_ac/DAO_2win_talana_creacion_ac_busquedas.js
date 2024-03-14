@@ -152,11 +152,59 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
     }
 
     /**
+     * @function busquedaParametrosOperacion - Función para realizar una busqueda en una tabla de netsuite.
+     * @param nombresParametros - Parametro para el filtro de la busqueda.
+     * @returns {Array} Resultados de la busqueda o mensaje de error.
+     */
+    function busquedaParametrosOperacion(nombresParametros) {
+        try{
+            log.debug("busquedaParametrosOperacion - nombresParametros", {
+                "nombresParametros": nombresParametros,
+                "tipoDato": typeof(nombresParametros)
+            })
+
+            // Tipo, filtros y columnas para la busqueda
+            var objSearch = {
+                type: "customrecord_2w_parametros_operacion",
+                filters: [
+                    ["name","is",nombresParametros[0]]
+                ],
+                columns: [
+                    search.createColumn({name: "name", label: "nombreParametro"}),
+                    search.createColumn({name: "custrecord_2w_parametro_numerico", label: "parametroNumerico"})
+                ]
+            };
+            var filtros = objSearch.filters
+
+            var result = obtenerResultados(objSearch);
+            log.audit('busquedaParametrosOperacion - result', {
+                "extension": result.length,
+                "resultado": result
+            });
+
+            // Valida que la busqueda retorne resultados
+            if (result.length > 0) {
+                return result;
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("002","busquedaParametrosOperacion","No se recuperaron parametros de operacion para filtros: " + filtros));
+            }  
+        }catch(error){
+            log.error("busquedaParametrosOperacion - error", error);
+            if (error.name === 'ERROR_PERSONALIZADO') {
+                throw error
+            } else {
+                throw errorModule.create(controladorErrores.controladorErrores("001","busquedaParametrosOperacion",error.message))
+            }
+        }
+    } 
+
+    /**
      * @function busquedaClustersActivos - Función para realizar una busqueda en una tabla de netsuite
      * @returns {Array} - Resultado de busqueda
      */
-    function busquedaClustersActivos() {
+    function busquedaClustersActivos(diasAtras) {
         try {
+            log.debug("busquedaClustersActivos - diasAtras", diasAtras)
             // Tipo, filtros y columnas para la busqueda
             var objSearch = {
                 type: "customrecord_2win_cluster_talana",
@@ -171,7 +219,8 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
                     search.createColumn({name: "custrecord_2win_cluster_talana_token", label: "token"}),
                     search.createColumn({name: "custrecord_2win_cluster_talana_activo", label: "activo"}),
                     search.createColumn({name: "custrecord_2win_cluster_talana_fecha_act", label: "ultimaFechaActualizacion"}),
-                    search.createColumn({name: "formulatext", formula: "TO_CHAR({today},'YYYY-MM-DD')", label: "stringFechaActual"})
+                    search.createColumn({name: "formulatext", formula: "TO_CHAR({today},'YYYY-MM-DD')", label: "stringFechaActual"}),
+                    search.createColumn({name: "formulatext", formula: "TO_CHAR({today}-" + String(diasAtras) + ",'YYYY-MM-DD')", label: "stringDiasAtras"}),
                 ]
             }
     
@@ -201,6 +250,7 @@ define(["N/search","N/error","./DAO_controlador_errores.js"], function(search,er
     return {
         busquedaCustomer:busquedaCustomer,
         obtenerToken: obtenerToken,
+        busquedaParametrosOperacion: busquedaParametrosOperacion,
         busquedaClustersActivos: busquedaClustersActivos
     }
 });
