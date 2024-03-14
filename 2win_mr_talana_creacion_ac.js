@@ -106,7 +106,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
                             acuerdosComerciales.push(acuerdoComercial)
                         });
                     } else {
-                        log.error("getInputData - while - else - pagina sin elementos", respuestaAcuerdosComerciales)
+                        log.error("getInputData - while - else - pagina sin elementos", urlPeticionAcuerdosComerciales + " - " + respuestaAcuerdosComerciales)
                     }
                     contador += 1
                 }
@@ -115,7 +115,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
 
                 return acuerdosComerciales
             } else {
-                throw errorModule.create(controladorErrores.controladorErrores("002","ejecutarPeticion","Cluster sin acuerdos comerciales: " + JSON.stringify(respuestaAcuerdosComerciales)))
+                throw errorModule.create(controladorErrores.controladorErrores("002","ejecutarPeticion",cluster.proceso.urlPeticionAcuerdosComerciales + " no recupero elementos: " + JSON.stringify(respuestaAcuerdosComerciales)))
             }
         } catch (error) {
             log.error("getInputData - error", error);
@@ -258,6 +258,7 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
 
             // Parsear value de reduce
             var acRs = JSON.parse(context.values[0]);
+            log.audit("reduce - acRs: " + context.key, acRs);
 
             if (acRs.acuerdoComercial.proceso.estado === "000" && acRs.razonSocial.proceso.estado === "000") {
                 acRs.razonSocial.proceso.externalId = acRs.razonSocial.proceso.nombreCluster + "_" + acRs.razonSocial.id + "_" + acRs.acuerdoComercial.id
