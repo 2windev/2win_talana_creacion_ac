@@ -351,9 +351,20 @@ define(["N/runtime","N/https","N/task","N/error","./libs_talana_creacion_ac/DAO_
             log.debug("summarize - registrosCreados", registrosCreados)
             log.audit("summarize - registrosCreados - " + cluster.nombre, registrosCreados[cluster.nombre].length)
 
-            // Recuperar errores
+            // Recuperar error de etapa getInputData
+            log.error("summarize - inputSummaryerror: ", summary.inputSummary.error);
+
+            // Recuperar errores etapa map
             summary.mapSummary.errors.iterator().each(function(key, value) {
+                value = JSON.parse(value)
                 log.error("summarize - mapSummaryerrors: " + key,  value);
+                return true;
+            });
+
+            // Recuperar errores etapa reduce
+            summary.reduceSummary.errors.iterator().each(function(key, value) {
+                value = JSON.parse(value)
+                log.error("summarize - reduceSummaryerrors: " + key,  JSON.parse(value));
                 return true;
             });
 
