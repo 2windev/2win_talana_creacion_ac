@@ -3,7 +3,7 @@
  * @module ./DAO_2win_iva_af_crear_registros.js
  * @NModuleScope Public
  */
-define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,errorModule,controladorErrores){
+define(["N/record","N/error","./DAO_2win_talana_creacion_ac_busquedas.js","./DAO_controlador_errores.js"], function(record,errorModule,dao,controladorErrores){
 
     /**
      * @function crearReporteAuditoria - Crea un nuevo registro en base a los datos recibidos
@@ -134,10 +134,10 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             var lineaRegistro = registro.selectNewLine({ sublistId: "addressbook" });
             log.debug("crearCliente - linea","addressbook");
             var addressSubrecord = lineaRegistro.getCurrentSublistSubrecord({ sublistId: "addressbook", fieldId: "addressbookaddress" });
-            addressSubrecord.setValue({ fieldId: "addressee", value: datos.razonSocial.proceso.addressee });
+            addressSubrecord.setValue({ fieldId: "addressee", value: datos.razonSocial.direccion }); // datos.razonSocial.proceso.addressee
             log.debug("crearCliente - linea","campo - addressee");
-            addressSubrecord.setValue({ fieldId: "addr1", value: datos.razonSocial.direccion });
-            log.debug("crearCliente - linea","campo - addr1");
+            // addressSubrecord.setValue({ fieldId: "addr1", value: datos.razonSocial.direccion });
+            // log.debug("crearCliente - linea","campo - addr1");
             /**@todo - Consultar de donde provienen los datos para estos campos */
             // addressSubrecord.setValue({ fieldId: "addr2", value: "" });
             // log.debug("crearCliente - linea","campo - addr2");
@@ -233,6 +233,7 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
 
             var emailList = [];
             datos.razonSocial.proceso.contactosCreados = [];
+            datos.razonSocial.proceso.contactosActualizados = [];
 
             // Si el acuerdo comercial tiene email
             if (datos.acuerdoComercial.hasOwnProperty("emails") && datos.acuerdoComercial.emails !== "" && datos.acuerdoComercial.emails !== null) {
@@ -244,10 +245,11 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
                     datosContacto = {
                         "customerId": datos.acuerdoComercial.proceso.idCustomer,
                         "typeContact": 'email',
-                        "firstName": 'Contacto', //datos.razonSocial.razonSocial,
+                        "firstName": i === 0 ? "Contacto" : "Contacto " + i, 
                         "lastName": '',
                         "telephone": datos.razonSocial.telefono,
                         "email": emailList[i],
+                        "direccion": datos.razonSocial.direccion,
                         "subsidiary": datos.razonSocial.proceso.idSubsidiaria
                     }
 
@@ -269,10 +271,11 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
                     datosContacto = {
                         "customerId": datos.acuerdoComercial.proceso.idCustomer,
                         "typeContact": 'Adm Contacto',
-                        "firstName": 'Contato Administrativo', //datos.razonSocial.razonSocial,
+                        "firstName": i === 0 ? "Contacto Administrativo" : "Contacto Administrativo " + i,                                                                               
                         "lastName": '',
                         "telephone": datos.razonSocial.telefono,
                         "email": emailList[i],
+                        "direccion": datos.razonSocial.direccion,
                         "subsidiary": datos.razonSocial.proceso.idSubsidiaria
                     }
 
@@ -288,7 +291,7 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             if (error.name === "ERROR_PERSONALIZADO") {
                 throw error
             } else {
-                throw errorModule.create(controladorErrores.controladorErrores("001", "getContacto", error.message + " para customer: " + customerId))
+                throw errorModule.create(controladorErrores.controladorErrores("001","getContacto", error.message + " para customer: " + datos.acuerdoComercial.proceso.idCustomer))
             }
         }
     }
@@ -317,6 +320,17 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             log.debug("crearContacto - homephone", datosContacto.telephone);
             registro.setValue({ fieldId: "email", value: datosContacto.email })
             log.debug("crearContacto - email", datosContacto.email);
+
+            var lineaRegistro = registro.selectNewLine({ sublistId: "addressbook" });
+            log.debug("crearContacto - linea","addressbook");
+            var addressSubrecord = lineaRegistro.getCurrentSublistSubrecord({ sublistId: "addressbook", fieldId: "addressbookaddress" });
+            addressSubrecord.setValue({ fieldId: "addressee", value: datosContacto.direccion });
+            log.debug("crearContacto - linea","campo - addressee");
+            addressSubrecord.setValue({ fieldId: "country", value: "CL" });
+            log.debug("crearContacto - linea","campo - country");
+            lineaRegistro.commitLine({ sublistId: 'addressbook' });
+            log.debug("crearCliente - lineaRegistro", "Se guardo linea addressbook");
+
             registro.setValue({ fieldId: "subsidiary", value: datosContacto.subsidiary })
             log.debug("crearContacto - subsidiary", datosContacto.subsidiary);
 
@@ -330,7 +344,7 @@ define(["N/record","N/error","./DAO_controlador_errores.js"], function(record,er
             if (error.name === "ERROR_PERSONALIZADO") {
                 throw error
             } else {
-                throw errorModule.create(controladorErrores.controladorErrores("001", "crearContacto", error.message + " para customer: " + datosContacto.customerId))
+                throw errorModule.create(controladorErrores.controladorErrores("001","crearContacto", error.message + " para customer: " + String(datosContacto.customerId)))
             }
         }
     };
